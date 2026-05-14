@@ -65,7 +65,3 @@ make clean test
 ```
 
 The tests compile the binary and run both modes against local dummy Unix-socket backends.
-
-## Hot paths
-
-`proxy` mode keeps a generic `UPSTREAMS` fallback, but automatically takes a two-upstream fast path for the normal Rinha shape. That path uses the same round-robin shape as the embedded .NET C LB (`next++ & 1`) and avoids zeroing the 8 KiB connection buffers on accept.
