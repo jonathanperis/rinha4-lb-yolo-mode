@@ -20,10 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Install native compiler
-        run: sudo apt-get update && sudo apt-get install -y clang lld
       - name: Build and integration-test both modes
-        run: make clean test CC=clang CFLAGS_ARCH="-march=haswell -flto -fuse-ld=lld -fomit-frame-pointer"
+        run: make clean test CFLAGS_ARCH="-march=x86-64-v3 -flto -fomit-frame-pointer"
 
   build-amd64:
     runs-on: ubuntu-latest
