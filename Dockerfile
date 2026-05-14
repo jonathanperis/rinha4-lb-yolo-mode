@@ -1,9 +1,9 @@
 FROM alpine:3.20 AS build
 
-RUN apk add --no-cache build-base
+RUN apk add --no-cache clang lld make musl-dev
 WORKDIR /src
 COPY . .
-RUN make clean all CFLAGS_ARCH="-march=x86-64-v3 -flto -fomit-frame-pointer" \
+RUN make clean all CC=clang CFLAGS_ARCH="-march=haswell -flto -fuse-ld=lld -fomit-frame-pointer" \
     && strip build/rinha4-lb-yolo-mode
 
 FROM alpine:3.20
