@@ -28,7 +28,6 @@
 #define MAX_UPSTREAM_PATH 108
 #define DEFAULT_PORT 9999
 #define DEFAULT_BACKLOG 65535
-#define DEFAULT_PROXY_BACKLOG 16384
 #define MAX_EVENTS 1024
 #define MAX_FDS 65536
 #define BUFFER_SIZE 4096
@@ -61,8 +60,6 @@ static int g_upstream_count = 0;
 static unsigned int g_rr_next = 0;
 static FdRef g_fd_refs[MAX_FDS];
 static int g_epoll_fd = -1;
-static int g_proxy_fast_two_upstreams = 0;
-static const char *g_proxy_backend_paths[2];
 
 static const char *env_or(const char *key, const char *fallback) {
     const char *value = getenv(key);
@@ -127,31 +124,6 @@ static int listen_tcp(int port, int backlog) {
     (void)setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one));
 #endif
     tune_tcp_socket(fd);
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons((uint16_t)port);
-
-    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        close(fd);
-        return -1;
-    }
-    if (listen(fd, backlog) < 0) {
-        close(fd);
-        return -1;
-    }
-    return fd;
-}
-
-static int listen_tcp_plain(int port, int backlog) {
-    int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-    if (fd < 0) return -1;
-
-    int one = 1;
-    (void)setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-    (void)setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -405,27 +377,9 @@ static int set_ref(int fd, Conn *conn, int side) {
     return 0;
 }
 
-static inline int proxy_connect_backend(int *connecting) {
-    const char *path;
-    if (__builtin_expect(g_proxy_fast_two_upstreams, 1)) {
-        path = g_proxy_backend_paths[g_rr_next++ & 1U];
-    } else {
-        path = g_upstreams[g_rr_next++ % (unsigned int)g_upstream_count].path;
-    }
+static int proxy_connect_backend(int *connecting) {
+    const char *path = g_upstreams[g_rr_next++ % (unsigned int)g_upstream_count].path;
     return connect_unix_nonblocking(path, connecting);
-}
-
-static inline Conn *alloc_conn(int client_fd, int backend_fd, int connecting) {
-    Conn *conn = (Conn *)malloc(sizeof(Conn));
-    if (conn == NULL) return NULL;
-    conn->client_fd = client_fd;
-    conn->backend_fd = backend_fd;
-    conn->backend_connecting = connecting;
-    conn->c2b_off = 0;
-    conn->c2b_len = 0;
-    conn->b2c_off = 0;
-    conn->b2c_len = 0;
-    return conn;
 }
 
 static void compact_buffer(char *buffer, size_t *off, size_t *len) {
@@ -548,12 +502,15 @@ static void accept_clients(int listen_fd) {
             continue;
         }
 
-        Conn *conn = alloc_conn(client_fd, backend_fd, connecting);
+        Conn *conn = (Conn *)calloc(1, sizeof(Conn));
         if (conn == NULL) {
             close(client_fd);
             close(backend_fd);
             continue;
         }
+        conn->client_fd = client_fd;
+        conn->backend_fd = backend_fd;
+        conn->backend_connecting = connecting;
 
         if (add_fd(client_fd, conn, 0, EPOLLIN) < 0 ||
             add_fd(backend_fd, conn, 1, connecting ? EPOLLOUT : EPOLLIN) < 0) {
@@ -606,15 +563,10 @@ static void handle_fd(int fd, uint32_t events) {
 
 static int run_proxy(void) {
     parse_upstreams("/sockets/api1.sock,/sockets/api2.sock");
-    g_proxy_fast_two_upstreams = (g_upstream_count == 2);
-    if (g_proxy_fast_two_upstreams) {
-        g_proxy_backend_paths[0] = g_upstreams[0].path;
-        g_proxy_backend_paths[1] = g_upstreams[1].path;
-    }
 
     int port = env_int("PORT", DEFAULT_PORT);
-    int backlog = env_int("BACKLOG", DEFAULT_PROXY_BACKLOG);
-    int listen_fd = listen_tcp_plain(port, backlog);
+    int backlog = env_int("BACKLOG", DEFAULT_BACKLOG);
+    int listen_fd = listen_tcp(port, backlog);
     if (listen_fd < 0) {
         perror("listen_tcp");
         return 1;

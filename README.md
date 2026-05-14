@@ -22,7 +22,7 @@ Commit-specific CI images are also published as `ci-<sha>`.
 | `LB_MODE` | `proxy` | `proxy` or `fdpass`. Aliases: `uds-proxy`, `fd`, `fd-pass`. |
 | `PORT` | `9999` | TCP listen port. |
 | `UPSTREAMS` | mode-specific | Comma-separated Unix socket paths. Proxy default is `/sockets/api1.sock,/sockets/api2.sock`; fdpass default is `/run/rinha/api1.sock,/run/rinha/api2.sock`. |
-| `BACKLOG` | mode-specific | TCP listen backlog. Proxy defaults to `16384` to match the embedded .NET C LB; fdpass defaults to `65535`. |
+| `BACKLOG` | `65535` | TCP listen backlog. |
 
 ## .NET/raw-UDS compose example
 
