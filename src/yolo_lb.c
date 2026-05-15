@@ -344,7 +344,7 @@ static int run_fdpass(void) {
         if (!(pfd.revents & POLLIN)) continue;
 
         for (;;) {
-            int client_fd = accept4(server_fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+            int client_fd = accept4(server_fd, NULL, NULL, SOCK_CLOEXEC);
             if (client_fd < 0) {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN || errno == EWOULDBLOCK) break;

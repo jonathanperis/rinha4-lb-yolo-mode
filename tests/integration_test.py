@@ -48,6 +48,21 @@ def http_get(port: int) -> bytes:
         return b"".join(chunks)
 
 
+def http_get_after_accept_delay(port: int) -> bytes:
+    with socket.create_connection(("127.0.0.1", port), timeout=2) as s:
+        time.sleep(0.05)
+        s.sendall(b"GET /ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+        chunks = []
+        while True:
+            data = s.recv(4096)
+            if not data:
+                break
+            chunks.append(data)
+            if b"fdpass-" in b"".join(chunks):
+                break
+        return b"".join(chunks)
+
+
 def unix_http_server(path: Path, body: bytes, stop: threading.Event) -> threading.Thread:
     def run() -> None:
         try:
@@ -191,6 +206,9 @@ def test_fdpass(tmp: Path) -> None:
     proc = run_lb({"LB_MODE": "fdpass", "PORT": str(port), "UPSTREAMS": f"{s1},{s2}"})
     try:
         wait_tcp(port)
+        delayed = http_get_after_accept_delay(port)
+        assert b"HTTP/1.1 200 OK" in delayed, delayed
+        assert b"fdpass-" in delayed, delayed
         out = http_get(port)
         assert b"HTTP/1.1 200 OK" in out, out
         assert b"fdpass-" in out, out
