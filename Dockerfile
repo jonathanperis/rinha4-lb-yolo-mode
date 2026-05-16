@@ -3,7 +3,7 @@ FROM alpine:3.20 AS build
 RUN apk add --no-cache build-base
 WORKDIR /src
 COPY . .
-RUN make clean all CFLAGS_ARCH="-march=x86-64-v3 -flto -fomit-frame-pointer" \
+RUN make clean all CFLAGS_ARCH="-march=haswell -mtune=haswell -mavx2 -mfma -flto -fomit-frame-pointer -fno-plt -fno-semantic-interposition -fno-trapping-math" \
     && strip build/rinha4-lb-yolo-mode
 
 FROM alpine:3.20

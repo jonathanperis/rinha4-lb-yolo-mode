@@ -5,7 +5,7 @@ Standalone YOLO-mode load balancer for Jonathan Peris' Rinha de Backend 2026 ent
 This image packages the two low-level C load-balancer strategies that were proven in the C and .NET repositories:
 
 - `LB_MODE=proxy`: epoll TCP-to-Unix-domain-socket stream proxy. Use this with raw HTTP backends that listen on Unix sockets, e.g. the .NET entry.
-- `LB_MODE=fdpass`: TCP acceptor with persistent Unix control sockets and `SCM_RIGHTS` file-descriptor handoff. Use this with APIs that receive accepted client sockets from the LB, e.g. the C entry.
+- `LB_MODE=fdpass`: TCP acceptor with persistent `SOCK_SEQPACKET` Unix control sockets and `SCM_RIGHTS` file-descriptor handoff. Accepted client FDs are handed off already nonblocking; use this with APIs that receive accepted client sockets from the LB, e.g. the C entry.
 
 The published image is:
 

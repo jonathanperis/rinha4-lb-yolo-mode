@@ -98,20 +98,15 @@ static void set_limits(void) {
     (void)setrlimit(RLIMIT_NOFILE, &limit);
 }
 
-static int set_nonblocking_cloexec(int fd) {
+static int set_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags >= 0 && fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) return -1;
-    flags = fcntl(fd, F_GETFD, 0);
-    if (flags >= 0 && fcntl(fd, F_SETFD, flags | FD_CLOEXEC) != 0) return -1;
     return 0;
 }
 
 static void tune_tcp_socket(int fd) {
     int one = 1;
     (void)setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
-#ifdef TCP_QUICKACK
-    (void)setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
-#endif
 }
 
 static int listen_tcp(int port, int backlog) {
@@ -142,8 +137,8 @@ static int listen_tcp(int port, int backlog) {
     return fd;
 }
 
-static int connect_unix_blocking(const char *path) {
-    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+static int connect_unix_fdpass(const char *path) {
+    int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
     if (fd < 0) return -1;
 
     struct sockaddr_un addr;
@@ -155,11 +150,10 @@ static int connect_unix_blocking(const char *path) {
     }
     strcpy(addr.sun_path, path);
 
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0 || set_nonblocking(fd) != 0) {
         close(fd);
         return -1;
     }
-    (void)set_nonblocking_cloexec(fd);
     return fd;
 }
 
@@ -282,7 +276,7 @@ static int fdpass_reconnect_one(int idx, int wait_forever) {
     g_fdpass_upstreams[idx].fd = -1;
 
     for (int tries = 0; wait_forever || tries < 20; ++tries) {
-        int fd = connect_unix_blocking(g_fdpass_upstreams[idx].path);
+        int fd = connect_unix_fdpass(g_fdpass_upstreams[idx].path);
         if (fd >= 0) {
             g_fdpass_upstreams[idx].fd = fd;
             return 0;
@@ -344,7 +338,7 @@ static int run_fdpass(void) {
         if (!(pfd.revents & POLLIN)) continue;
 
         for (;;) {
-            int client_fd = accept4(server_fd, NULL, NULL, SOCK_CLOEXEC);
+            int client_fd = accept4(server_fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
             if (client_fd < 0) {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN || errno == EWOULDBLOCK) break;

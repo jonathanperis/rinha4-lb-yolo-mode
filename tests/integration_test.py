@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import fcntl
 import os
 import socket
 import struct
@@ -116,7 +117,7 @@ def fdpass_server(path: Path, body: bytes, stop: threading.Event) -> threading.T
     def run() -> None:
         try:
             path.unlink(missing_ok=True)
-            srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            srv = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
             srv.bind(str(path))
             srv.listen(32)
             srv.settimeout(0.1)
@@ -140,6 +141,9 @@ def fdpass_server(path: Path, body: bytes, stop: threading.Event) -> threading.T
                         conn.close()
                         continue
                     with socket.socket(fileno=fd) as client:
+                        status_flags = fcntl.fcntl(client.fileno(), fcntl.F_GETFL)
+                        assert status_flags & os.O_NONBLOCK, "fdpass client fd must be nonblocking"
+                        client.setblocking(True)
                         _ = client.recv(4096)
                         client.sendall(response)
                     alive.append(conn)
