@@ -1,0 +1,166 @@
+name: LB Comparison Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      official_ref:
+        description: Rinha official repo ref
+        required: true
+        default: main
+      k6_image:
+        description: k6 Docker image
+        required: true
+        default: grafana/k6:latest
+      benchmark_repetitions:
+        description: Number of k6 repetitions per participant
+        required: true
+        default: "1"
+      lb_sha:
+        description: Optional LB image SHA tag suffix; empty means github.sha
+        required: false
+        default: ""
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  LB_SHA: ${{ inputs.lb_sha || github.sha }}
+  LB_C_IMAGE: ghcr.io/${{ github.repository }}:ci-${{ inputs.lb_sha || github.sha }}
+  LB_ASM_IMAGE: ghcr.io/${{ github.repository }}:asm-ci-${{ inputs.lb_sha || github.sha }}
+
+jobs:
+  comparison-benchmark:
+    name: Benchmark ${{ matrix.participant }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: ${{ matrix.allow_failure }}
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - participant: dotnet-c-lb
+            allow_failure: false
+          - participant: dotnet-asm-lb
+            allow_failure: false
+          - participant: c-c-lb
+            allow_failure: false
+          - participant: c-asm-lb
+            allow_failure: false
+          - participant: yolo-current-lb
+            allow_failure: false
+          - participant: yolo-standalone-asm-lb
+            allow_failure: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install host utilities
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends curl git jq
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify LB images exist
+        env:
+          PARTICIPANT: ${{ matrix.participant }}
+        run: |
+          set -euo pipefail
+          required=()
+          case "$PARTICIPANT" in
+            dotnet-c-lb|c-c-lb) required+=("$LB_C_IMAGE") ;;
+            dotnet-asm-lb|c-asm-lb|yolo-standalone-asm-lb) required+=("$LB_ASM_IMAGE") ;;
+          esac
+          for image in "${required[@]}"; do
+            for attempt in {1..18}; do
+              if docker manifest inspect "$image" > /dev/null 2>&1; then
+                echo "Found $image"
+                break
+              fi
+              if [[ "$attempt" == "18" ]]; then
+                echo "Required LB image does not exist yet: $image" >&2
+                echo "Wait for build.yml on this commit to publish it, or dispatch with lb_sha=<published-sha>." >&2
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+
+      - name: Run official-like comparison benchmark
+        env:
+          PARTICIPANT: ${{ matrix.participant }}
+          COMPOSE_FILE: competitor-compose/${{ matrix.participant }}/docker-compose.yml
+          OFFICIAL_REF: ${{ inputs.official_ref || 'main' }}
+          K6_IMAGE: ${{ inputs.k6_image || 'grafana/k6:latest' }}
+          BENCHMARK_PULL_IMAGE: "true"
+          BENCHMARK_NO_BUILD: "true"
+          BENCHMARK_REPETITIONS: ${{ inputs.benchmark_repetitions || '1' }}
+          RESULTS_DIR: comparison-results/${{ matrix.participant }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ARTIFACT_NAME: comparison-${{ matrix.participant }}-${{ github.run_number }}
+        run: bash scripts/ci-comparison-benchmark.sh
+
+      - name: Upload participant artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: comparison-${{ matrix.participant }}-${{ github.run_number }}
+          path: |
+            comparison-results/${{ matrix.participant }}/results.json
+            comparison-results/${{ matrix.participant }}/metadata.json
+            comparison-results/${{ matrix.participant }}/k6-report.html
+            comparison-results/${{ matrix.participant }}/results-repetition-*.json
+            comparison-results/${{ matrix.participant }}/k6-report-repetition-*.html
+            comparison-results/${{ matrix.participant }}/docker-compose.log
+            comparison-results/${{ matrix.participant }}/docker-state-*.txt
+          if-no-files-found: ignore
+
+  summarize:
+    name: Summarize comparison deltas
+    runs-on: ubuntu-latest
+    needs: comparison-benchmark
+    if: always()
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download benchmark artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: comparison-*-${{ github.run_number }}
+          path: comparison-artifacts
+          merge-multiple: false
+
+      - name: Write comparison summary
+        run: python3 scripts/summarize-comparison.py --fixtures comparison-artifacts --output comparison-results/latest.json
+
+      - name: Upload comparison summary
+        uses: actions/upload-artifact@v7
+        with:
+          name: comparison-summary-${{ github.run_number }}
+          path: comparison-results/latest.json
+
+      - name: Commit latest comparison summary
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add comparison-results/latest.json
+          if git diff --cached --quiet; then
+            echo "No comparison summary changes to commit"
+          else
+            git commit -m "docs: update lb comparison results"
+            git push
+          fi
