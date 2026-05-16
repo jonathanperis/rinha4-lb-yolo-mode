@@ -1,0 +1,59 @@
+---
+import '../styles/globals.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'rinha4-lb-yolo-mode | YOLO LOAD BALANCER',
+  description = 'Standalone Rinha4 load balancer docs and C-vs-assembly comparison lane.'
+} = Astro.props;
+
+const pageUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : `https://jonathanperis.github.io${Astro.url.pathname}`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const asset = (path: string) => `${base}${path}`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'rinha4-lb-yolo-mode',
+  description,
+  url: pageUrl,
+  codeRepository: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode',
+  programmingLanguage: ['C', 'x86-64 assembly'],
+  runtimePlatform: 'Linux / Docker',
+  license: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode/blob/main/LICENSE',
+  author: { '@type': 'Person', name: 'Jonathan Peris', url: 'https://github.com/jonathanperis' }
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href={asset('/title-mark.svg')} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content="Rinha de Backend, load balancer, C, assembly, fd passing, k6, performance" />
+    <link rel="canonical" href={pageUrl} />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:site_name" content="rinha4-lb-yolo-mode" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

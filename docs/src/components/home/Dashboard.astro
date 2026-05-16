@@ -1,0 +1,58 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+let comparison: any = null;
+try {
+  comparison = (await import('../../../public/comparison/latest.json')).default;
+} catch {
+  comparison = null;
+}
+const participants = comparison?.participants ?? [];
+const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
+---
+<section class="stats-grid">
+  <div class="stat-box">
+    <div class="stat-label">Modes</div>
+    <div class="stat-value">proxy / fdpass</div>
+    <div class="stat-sub">TCP to UDS stream, or SCM_RIGHTS handoff</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Baseline</div>
+    <div class="stat-value">C</div>
+    <div class="stat-sub">ghcr.io/jonathanperis/rinha4-lb-yolo-mode</div>
+  </div>
+  <div class="stat-box warning">
+    <div class="stat-label">Challenger</div>
+    <div class="stat-value">ASM</div>
+    <div class="stat-sub">assembly LB candidate for all Rinha4 stacks</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Comparison matrix</div>
+    <div class="stat-value">{participants.length || 'pending'}</div>
+    <div class="stat-sub">dotnet, C, and assembly stacks × LB variants</div>
+  </div>
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <h2>Repository role</h2>
+    <p>
+      This repo owns the shared load-balancer image used by the Rinha4 .NET and C implementations and now tracks the assembly replacement lane.
+    </p>
+    <ul>
+      <li><code>LB_MODE=proxy</code>: epoll TCP-to-Unix stream proxy for raw HTTP backends.</li>
+      <li><code>LB_MODE=fdpass</code>: persistent Unix control sockets passing accepted client FDs.</li>
+      <li>Benchmark workflow compares the same API stacks against C and ASM LB images.</li>
+    </ul>
+  </article>
+  <article class="panel">
+    <h2>Latest comparison</h2>
+    {comparison ? (
+      <>
+        <p>Latest archived summary: <code>{generatedAt ?? 'timestamp unavailable'}</code>.</p>
+        <p><a href={`${base}/reports/`}>Open the report table</a> for participant-level deltas.</p>
+      </>
+    ) : (
+      <p>No comparison summary has been archived yet. Dispatch the LB Comparison Benchmark workflow to publish <code>comparison-results/latest.json</code>.</p>
+    )}
+  </article>
+</section>

@@ -65,3 +65,19 @@ make clean test
 ```
 
 The tests compile the binary and run both modes against local dummy Unix-socket backends.
+
+## Docs and reports
+
+GitHub Pages lives under `docs/` and follows the same structure used by the Rinha4 API repositories:
+
+- `/` home page for the LB role and current C-vs-assembly lane
+- `/docs/` markdown-backed wiki from `docs/wiki/*.md`
+- `/reports/` latest comparison summary copied from `comparison-results/latest.json`
+
+Build locally with Bun:
+
+```bash
+cd docs
+bun install --frozen-lockfile
+NODE_ENV=production bun run build
+```
