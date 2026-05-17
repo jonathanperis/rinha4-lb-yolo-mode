@@ -6,53 +6,79 @@ try {
 } catch {
   comparison = null;
 }
-const participants = comparison?.participants ?? [];
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : [];
+const hasComparison = participants.length > 0;
 const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
 ---
-<section class="stats-grid">
-  <div class="stat-box">
-    <div class="stat-label">Modes</div>
-    <div class="stat-value">proxy / fdpass</div>
-    <div class="stat-sub">TCP to UDS stream, or SCM_RIGHTS handoff</div>
+<section class="topology-section" aria-labelledby="topology-title">
+  <div class="section-kicker">runtime contracts</div>
+  <div class="section-heading-row">
+    <h2 id="topology-title">Two modes, one promotion question.</h2>
+    <p>The assembly variant only earns default status if it preserves the C baseline contracts across every stack.</p>
   </div>
-  <div class="stat-box">
-    <div class="stat-label">Baseline</div>
-    <div class="stat-value">C</div>
-    <div class="stat-sub">ghcr.io/jonathanperis/rinha4-lb-yolo-mode</div>
-  </div>
-  <div class="stat-box warning">
-    <div class="stat-label">Challenger</div>
-    <div class="stat-value">ASM</div>
-    <div class="stat-sub">assembly LB candidate for all Rinha4 stacks</div>
-  </div>
-  <div class="stat-box">
-    <div class="stat-label">Comparison matrix</div>
-    <div class="stat-value">{participants.length || 'pending'}</div>
-    <div class="stat-sub">dotnet, C, and assembly stacks × LB variants</div>
+
+  <div class="topology-grid">
+    <article class="topology-card c-card">
+      <span class="mode-label">proxy mode</span>
+      <h3>TCP to Unix stream</h3>
+      <pre><code>judge :9999
+  │
+  ├─ uds:/sockets/api1.sock
+  └─ uds:/sockets/api2.sock</code></pre>
+      <p>Used by raw HTTP backends such as the .NET NativeAOT entry.</p>
+    </article>
+    <article class="topology-card asm-card">
+      <span class="mode-label">fdpass mode</span>
+      <h3>Accepted FD handoff</h3>
+      <pre><code>judge :9999
+  │
+  ├─ SCM_RIGHTS → api1
+  └─ SCM_RIGHTS → api2</code></pre>
+      <p>Used by C and assembly stacks that receive already accepted client sockets.</p>
+    </article>
   </div>
 </section>
 
-<section class="panel-grid">
-  <article class="panel">
-    <h2>Repository role</h2>
-    <p>
-      This repo owns the shared load-balancer image used by the Rinha4 .NET and C implementations and now tracks the assembly replacement lane.
-    </p>
-    <ul>
-      <li><code>LB_MODE=proxy</code>: epoll TCP-to-Unix stream proxy for raw HTTP backends.</li>
-      <li><code>LB_MODE=fdpass</code>: persistent Unix control sockets passing accepted client FDs.</li>
-      <li>Benchmark workflow compares the same API stacks against C and ASM LB images.</li>
-    </ul>
-  </article>
-  <article class="panel">
-    <h2>Latest comparison</h2>
-    {comparison ? (
+<section class="evidence-section" aria-labelledby="evidence-title">
+  <div class="section-kicker">comparison matrix</div>
+  <div class="section-heading-row">
+    <h2 id="evidence-title">Benchmark evidence stays explicit.</h2>
+    <p>CI runs are regression signals. Official runner results remain the final source of truth.</p>
+  </div>
+
+  <div class="matrix-grid">
+    <div class="matrix-cell">
+      <span>dotnet</span>
+      <strong>C LB</strong>
+      <strong>ASM LB</strong>
+    </div>
+    <div class="matrix-cell">
+      <span>C</span>
+      <strong>C LB</strong>
+      <strong>ASM LB</strong>
+    </div>
+    <div class="matrix-cell">
+      <span>assembly</span>
+      <strong>current LB</strong>
+      <strong>standalone ASM LB</strong>
+    </div>
+  </div>
+
+  <article class="comparison-status">
+    {hasComparison ? (
       <>
-        <p>Latest archived summary: <code>{generatedAt ?? 'timestamp unavailable'}</code>.</p>
-        <p><a href={`${base}/reports/`}>Open the report table</a> for participant-level deltas.</p>
+        <span class="status-pill good">summary available</span>
+        <h3>{participants.length} participant rows archived</h3>
+        <p>Latest summary: <code>{generatedAt ?? 'timestamp not recorded'}</code>.</p>
+        <a class="text-link" href={`${base}/reports/`}>Inspect participant deltas</a>
       </>
     ) : (
-      <p>No comparison summary has been archived yet. Dispatch the LB Comparison Benchmark workflow to publish <code>comparison-results/latest.json</code>.</p>
+      <>
+        <span class="status-pill pending">waiting for run</span>
+        <h3>No comparison summary is archived yet.</h3>
+        <p>Dispatch the LB Comparison Benchmark workflow. When it writes <code>comparison-results/latest.json</code>, Pages will render it here and under reports.</p>
+        <a class="text-link" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open GitHub benchmark workflow</a>
+      </>
     )}
   </article>
 </section>

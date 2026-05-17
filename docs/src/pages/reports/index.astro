@@ -9,9 +9,9 @@ try {
 } catch {
   comparison = null;
 }
-const participants = comparison?.participants ?? [];
-const rows = Array.isArray(participants) ? participants : [];
-const fmt = (value: any) => value === undefined || value === null || value === '' ? '—' : String(value);
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : [];
+const rows = participants;
+const fmt = (value: any) => value === undefined || value === null || value === '' ? 'not recorded' : String(value);
 const score = (row: any) => fmt(row.final_score ?? row.score ?? row.summary?.final_score);
 const p99 = (row: any) => fmt(row.p99 ?? row.summary?.p99);
 const failures = (row: any) => fmt(row.failure_rate ?? row.failures ?? row.summary?.failure_rate);
@@ -22,16 +22,19 @@ const errors = (row: any) => fmt(row.http_errors ?? row.summary?.http_errors);
   <Navbar />
   <main>
     <section class="reports-hero">
-      <p class="eyebrow">LB COMPARISON ARCHIVE</p>
-      <h1>C BASELINE VS ASM CHALLENGER.</h1>
+      <p class="eyebrow">LB comparison archive</p>
+      <h1>C baseline versus ASM challenger.</h1>
       <p class="tagline">
         Official-like workflow summaries compare dotnet, C, and assembly Rinha4 stacks while swapping the shared C YOLO LB and the assembly LB candidate.
       </p>
     </section>
 
-    {comparison ? (
+    {rows.length > 0 ? (
       <section class="report-table-wrap">
-        <p>Source summary: <code>docs/public/comparison/latest.json</code>. Generated: <code>{fmt(comparison.generated_at ?? comparison.timestamp)}</code>.</p>
+        <div class="report-intro">
+          <span class="status-pill good">summary available</span>
+          <p>Source: <code>docs/public/comparison/latest.json</code>. Generated: <code>{fmt(comparison.generated_at ?? comparison.timestamp)}</code>.</p>
+        </div>
         <div class="report-scroll">
           <table class="report-table">
             <thead>
@@ -58,11 +61,13 @@ const errors = (row: any) => fmt(row.http_errors ?? row.summary?.http_errors);
         </div>
       </section>
     ) : (
-      <section class="panel">
-        <h2>No comparison summary yet</h2>
+      <section class="empty-report">
+        <span class="status-pill pending">waiting for run</span>
+        <h2>No comparison summary is archived yet.</h2>
         <p>
-          The Pages build expects <code>comparison-results/latest.json</code> from the benchmark workflow; when present, the deploy workflow copies it to <code>docs/public/comparison/latest.json</code> before building.
+          The benchmark workflow writes <code>comparison-results/latest.json</code>. The Pages workflow copies it to <code>docs/public/comparison/latest.json</code> before building this route.
         </p>
+        <a class="button primary" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open GitHub benchmark workflow</a>
       </section>
     )}
   </main>
