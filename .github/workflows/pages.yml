@@ -57,6 +57,7 @@ jobs:
         working-directory: docs
         env:
           NODE_ENV: production
+          PUBLIC_GA_ID: G-VN29JG8MTG
         run: bun run build
 
       - name: Upload artifact
