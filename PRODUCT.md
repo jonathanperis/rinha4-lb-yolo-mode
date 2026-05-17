@@ -4,20 +4,21 @@
 brand
 
 ## Product Purpose
-`rinha4-lb-yolo-mode` is the public documentation and benchmark evidence surface for Jonathan Peris' shared Rinha de Backend 2026 load balancer. It explains the current C baseline, the assembly challenger, and the comparison lane used to decide whether the assembly LB can become default across the .NET, C, and assembly Rinha4 stacks.
+`rinha4-lb-yolo-mode` is the public documentation, release, and benchmark evidence surface for Jonathan Peris' shared Rinha de Backend 2026 load balancer. The default load balancer is now the x86-64 assembly implementation, with the original C implementation retained as a readable baseline and comparison image for .NET, C, and assembly Rinha4 stacks.
 
 ## Users
-- Jonathan and agents working on Rinha4 performance experiments.
+- Jonathan and agents rolling the promoted ASM LB through Rinha4 repos.
 - Rinha reviewers or competitors checking topology, image contracts, and benchmark evidence.
-- Future maintainers who need to understand proxy mode, fd-passing mode, and promotion gates without reading the full C source first.
+- Future maintainers who need to understand proxy mode, fd-passing mode, C baseline tags, and promotion gates without reading the full source first.
 
 ## Brand Voice
 Precise, mechanical, and evidence-first. The site should feel like an instrument bench: measured, sharp, and operational. It should not read like a generic SaaS landing page or a decorative terminal theme.
 
 ## Strategic Principles
-- Proof before hype: label targets, current status, and missing data honestly.
-- Transport clarity: make proxy mode and fd-passing mode understandable at a glance.
-- Same question everywhere: can ASM replace C without regressions?
+- Default is explicit: `latest` and release tags mean ASM after this promotion.
+- Baseline remains visible: C tags exist for repeatable C-vs-ASM comparison, not as hidden legacy.
+- Transport clarity: make proxy mode, fd-passing mode, and fdpass socket type understandable at a glance.
+- Correctness before p99: false positives, false negatives, HTTP errors, or readiness failures reject a run before latency analysis.
 - CI is signal, not truth: separate CI comparisons from official runner evidence.
 
 ## Anti-References

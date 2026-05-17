@@ -23,9 +23,9 @@ const errors = (row: any) => fmt(row.http_errors ?? row.summary?.http_errors);
   <main>
     <section class="reports-hero">
       <p class="eyebrow">LB comparison archive</p>
-      <h1>C baseline versus ASM challenger.</h1>
+      <h1>ASM default versus C baseline.</h1>
       <p class="tagline">
-        Official-like workflow summaries compare dotnet, C, and assembly Rinha4 stacks while swapping the shared C YOLO LB and the assembly LB candidate.
+        Official-like workflow summaries compare dotnet, C, and assembly Rinha4 stacks while pinning the promoted ASM LB against the retained C YOLO baseline.
       </p>
     </section>
 

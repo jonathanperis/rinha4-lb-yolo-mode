@@ -137,8 +137,14 @@ static int listen_tcp(int port, int backlog) {
     return fd;
 }
 
+static int fdpass_socket_type(void) {
+    const char *value = env_or("LB_FDPASS_SOCKET_TYPE", "seqpacket");
+    if (streq_ci(value, "stream")) return SOCK_STREAM;
+    return SOCK_SEQPACKET;
+}
+
 static int connect_unix_fdpass(const char *path) {
-    int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
+    int fd = socket(AF_UNIX, fdpass_socket_type() | SOCK_CLOEXEC, 0);
     if (fd < 0) return -1;
 
     struct sockaddr_un addr;
@@ -338,7 +344,7 @@ static int run_fdpass(void) {
         if (!(pfd.revents & POLLIN)) continue;
 
         for (;;) {
-            int client_fd = accept4(server_fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+            int client_fd = accept4(server_fd, NULL, NULL, SOCK_CLOEXEC);
             if (client_fd < 0) {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN || errno == EWOULDBLOCK) break;

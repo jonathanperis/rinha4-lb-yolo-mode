@@ -1,7 +1,7 @@
 # DESIGN
 
 ## Scene
-An engineer is checking a Rinha4 transport experiment late at night on a desktop monitor. The page is a control bench for deciding whether a new assembly load balancer is safe to promote. Dark mode fits the scene, but the interface must be calm enough for docs reading.
+An engineer is checking a Rinha4 transport rollout late at night on a desktop monitor. The page is a control bench for confirming that the promoted assembly load balancer remains safe across the .NET, C, and assembly stacks. Dark mode fits the scene, but the interface must be calm enough for docs reading.
 
 ## Visual Direction
 Instrument bench, not terminal cosplay. Use a dark graphite base with copper, cyan, and violet signals. Topology lines, tables, and command blocks carry the visual identity. Motion is minimal and never blocks reading.
@@ -14,7 +14,7 @@ Full palette, source-backed and restrained in area:
 - Muted text: blue-gray.
 - Copper: C baseline and warnings.
 - Cyan: proxy/fdpass transport lines.
-- Violet: assembly challenger.
+- Violet: promoted assembly default.
 - Red: failures and regressions only.
 
 ## Typography
@@ -24,7 +24,7 @@ Full palette, source-backed and restrained in area:
 
 ## Components
 - Navigation: padded, non-clipping, clear focus states.
-- Hero: proof statement plus adjacent topology/proof rail.
+- Hero: promoted default statement plus adjacent image-role proof rail.
 - Evidence modules: labeled status, not decorative metric cards.
 - Docs shell: fixed sidebar on desktop, drawer on mobile, high-contrast content.
 - Code blocks: readable, scrollable, copy-friendly spacing.

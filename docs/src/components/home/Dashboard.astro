@@ -13,28 +13,25 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
 <section class="topology-section" aria-labelledby="topology-title">
   <div class="section-kicker">runtime contracts</div>
   <div class="section-heading-row">
-    <h2 id="topology-title">Two modes, one promotion question.</h2>
-    <p>The assembly variant only earns default status if it preserves the C baseline contracts across every stack.</p>
+    <h2 id="topology-title">One ASM default, two transport contracts.</h2>
+    <p>The promoted binary keeps the C baseline's external shape: proxy for raw Unix HTTP APIs, fdpass for accepted-socket APIs.</p>
   </div>
 
   <div class="topology-grid">
-    <article class="topology-card c-card">
-      <span class="mode-label">proxy mode</span>
-      <h3>TCP to Unix stream</h3>
-      <pre><code>judge :9999
-  │
-  ├─ uds:/sockets/api1.sock
-  └─ uds:/sockets/api2.sock</code></pre>
-      <p>Used by raw HTTP backends such as the .NET NativeAOT entry.</p>
-    </article>
     <article class="topology-card asm-card">
-      <span class="mode-label">fdpass mode</span>
-      <h3>Accepted FD handoff</h3>
-      <pre><code>judge :9999
-  │
-  ├─ SCM_RIGHTS → api1
-  └─ SCM_RIGHTS → api2</code></pre>
-      <p>Used by C and assembly stacks that receive already accepted client sockets.</p>
+      <span class="mode-label">default image</span>
+      <h3>Promoted ASM path</h3>
+      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:latest
+  ├─ LB_MODE=proxy
+  └─ LB_MODE=fdpass</code></pre>
+      <p>Used by downstream stacks unless a comparison run deliberately pins the C baseline.</p>
+    </article>
+    <article class="topology-card c-card">
+      <span class="mode-label">baseline image</span>
+      <h3>Retained C path</h3>
+      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:c-ci-&lt;sha&gt;
+  └─ compare against asm-ci-&lt;sha&gt;</code></pre>
+      <p>Used to prove that ASM keeps correctness and latency at or above the old default.</p>
     </article>
   </div>
 </section>
@@ -42,25 +39,25 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
 <section class="evidence-section" aria-labelledby="evidence-title">
   <div class="section-kicker">comparison matrix</div>
   <div class="section-heading-row">
-    <h2 id="evidence-title">Benchmark evidence stays explicit.</h2>
-    <p>CI runs are regression signals. Official runner results remain the final source of truth.</p>
+    <h2 id="evidence-title">Promotion did not remove the benchmark gate.</h2>
+    <p>Every stack still needs a clean C-vs-ASM lane before a downstream rollout is considered stable.</p>
   </div>
 
   <div class="matrix-grid">
     <div class="matrix-cell">
       <span>dotnet</span>
-      <strong>C LB</strong>
-      <strong>ASM LB</strong>
+      <strong>ASM default</strong>
+      <strong>C baseline</strong>
     </div>
     <div class="matrix-cell">
       <span>C</span>
-      <strong>C LB</strong>
-      <strong>ASM LB</strong>
+      <strong>ASM fdpass</strong>
+      <strong>C fdpass</strong>
     </div>
     <div class="matrix-cell">
       <span>assembly</span>
-      <strong>current LB</strong>
-      <strong>standalone ASM LB</strong>
+      <strong>ASM shared LB</strong>
+      <strong>baseline lane</strong>
     </div>
   </div>
 

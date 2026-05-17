@@ -1,4 +1,4 @@
-name: Build and publish LB image
+name: Build and publish LB images
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Build and integration-test both modes
+      - name: Build and integration-test C and ASM implementations
         run: make clean test CFLAGS_ARCH="-march=x86-64-v3 -flto -fomit-frame-pointer"
 
   build-amd64:
@@ -58,25 +58,40 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract ASM Docker metadata
+        id: meta-asm
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ steps.semver.outputs.version }},enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-            type=raw,value=ci-${{ github.sha }},enable=${{ github.event_name != 'pull_request' }}
+            type=raw,value=asm-ci-${{ github.sha }},enable=${{ github.event_name != 'pull_request' }}
             type=sha
-      - name: Build and push linux/amd64
+      - name: Build and push ASM linux/amd64 default image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-asm.outputs.tags }}
+          labels: ${{ steps.meta-asm.outputs.labels }}
+          build-args: |
+            LB_IMPL=asm
+      - name: Build and push C baseline linux/amd64 image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:c-ci-${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:c-latest
+          labels: ${{ steps.meta-asm.outputs.labels }}
+          build-args: |
+            LB_IMPL=c
       - name: Create Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v3

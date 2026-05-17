@@ -64,6 +64,22 @@ def http_get_after_accept_delay(port: int) -> bytes:
         return b"".join(chunks)
 
 
+def http_get_split_headers(port: int) -> bytes:
+    with socket.create_connection(("127.0.0.1", port), timeout=2) as s:
+        s.sendall(b"GET /ready HTTP/1.1\r\nHost: local")
+        time.sleep(0.01)
+        s.sendall(b"host\r\nConnection: close\r\n\r\n")
+        chunks = []
+        while True:
+            data = s.recv(4096)
+            if not data:
+                break
+            chunks.append(data)
+            if b"proxy-" in b"".join(chunks):
+                break
+        return b"".join(chunks)
+
+
 def unix_http_server(path: Path, body: bytes, stop: threading.Event) -> threading.Thread:
     def run() -> None:
         try:
@@ -80,8 +96,16 @@ def unix_http_server(path: Path, body: bytes, stop: threading.Event) -> threadin
                     continue
                 with conn:
                     conn.settimeout(0.5)
-                    req = conn.recv(4096)
-                    if not req:
+                    req = b""
+                    while b"\r\n\r\n" not in req:
+                        try:
+                            chunk = conn.recv(4096)
+                        except socket.timeout:
+                            break
+                        if not chunk:
+                            break
+                        req += chunk
+                    if not req or b"\r\n\r\n" not in req:
                         continue
                     try:
                         conn.sendall(response)
@@ -113,11 +137,11 @@ def recv_fd(conn: socket.socket) -> int:
     raise RuntimeError("no fd received")
 
 
-def fdpass_server(path: Path, body: bytes, stop: threading.Event) -> threading.Thread:
+def fdpass_server(path: Path, body: bytes, stop: threading.Event, sock_type: int = socket.SOCK_SEQPACKET) -> threading.Thread:
     def run() -> None:
         try:
             path.unlink(missing_ok=True)
-            srv = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+            srv = socket.socket(socket.AF_UNIX, sock_type)
             srv.bind(str(path))
             srv.listen(32)
             srv.settimeout(0.1)
@@ -137,13 +161,12 @@ def fdpass_server(path: Path, body: bytes, stop: threading.Event) -> threading.T
                     except socket.timeout:
                         alive.append(conn)
                         continue
-                    except OSError:
+                    except (OSError, RuntimeError):
                         conn.close()
                         continue
                     with socket.socket(fileno=fd) as client:
                         status_flags = fcntl.fcntl(client.fileno(), fcntl.F_GETFL)
-                        assert status_flags & os.O_NONBLOCK, "fdpass client fd must be nonblocking"
-                        client.setblocking(True)
+                        assert not (status_flags & os.O_NONBLOCK), "fdpass client fd must be blocking for assembly-style backends"
                         _ = client.recv(4096)
                         client.sendall(response)
                     alive.append(conn)
@@ -187,6 +210,9 @@ def test_proxy(tmp: Path) -> None:
         out = http_get(port)
         assert b"HTTP/1.1 200 OK" in out, out
         assert b"proxy-" in out, out
+        split = http_get_split_headers(port)
+        assert b"HTTP/1.1 200 OK" in split, split
+        assert b"proxy-" in split, split
     finally:
         proc.terminate()
         try:
@@ -196,24 +222,99 @@ def test_proxy(tmp: Path) -> None:
         stop.set()
 
 
-def test_fdpass(tmp: Path) -> None:
+def test_fdpass(tmp: Path, sock_type: int = socket.SOCK_SEQPACKET, extra_env: dict[str, str] | None = None) -> None:
     stop = threading.Event()
-    s1 = tmp / "fd1.sock"
-    s2 = tmp / "fd2.sock"
-    fdpass_server(s1, b"fdpass-1", stop)
-    fdpass_server(s2, b"fdpass-2", stop)
+    s1 = tmp / f"fd1-{sock_type}.sock"
+    s2 = tmp / f"fd2-{sock_type}.sock"
+    fdpass_server(s1, b"fdpass-1", stop, sock_type)
+    fdpass_server(s2, b"fdpass-2", stop, sock_type)
     # Give control sockets a moment to bind; fdpass mode connects before listening.
     deadline = time.time() + 2
     while time.time() < deadline and not (s1.exists() and s2.exists()):
         time.sleep(0.01)
     port = 18082
-    proc = run_lb({"LB_MODE": "fdpass", "PORT": str(port), "UPSTREAMS": f"{s1},{s2}"})
+    env = {"LB_MODE": "fdpass", "PORT": str(port), "UPSTREAMS": f"{s1},{s2}"}
+    if extra_env:
+        env.update(extra_env)
+    proc = run_lb(env)
     try:
         wait_tcp(port)
         delayed = http_get_after_accept_delay(port)
         assert b"HTTP/1.1 200 OK" in delayed, delayed
         assert b"fdpass-" in delayed, delayed
-        out = http_get(port)
+        bodies = [delayed]
+        for _ in range(4):
+            out = http_get(port)
+            assert b"HTTP/1.1 200 OK" in out, out
+            assert b"fdpass-" in out, out
+            bodies.append(out)
+        joined = b"\n".join(bodies)
+        assert b"fdpass-1" in joined and b"fdpass-2" in joined, joined
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        stop.set()
+
+
+def assert_exits_nonzero(env: dict[str, str], *, code: int | None = None, needle: bytes = b"") -> None:
+    proc = run_lb(env)
+    try:
+        rc = proc.wait(timeout=2)
+        stderr = proc.stderr.read() if proc.stderr else b""
+        assert rc != 0, f"expected failure for {env}"
+        if code is not None:
+            assert rc == code, (env, rc, stderr)
+        if needle:
+            assert needle.lower() in stderr.lower(), (env, rc, stderr)
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+
+
+def test_invalid_lb_modes(tmp: Path) -> None:
+    upstreams = f"{tmp / 'missing1.sock'},{tmp / 'missing2.sock'}"
+    for value in ("foo", "fdpass-garbage"):
+        assert_exits_nonzero(
+            {"LB_MODE": value, "PORT": "18183", "UPSTREAMS": upstreams},
+            code=2,
+            needle=b"unsupported",
+        )
+
+
+def test_bad_upstreams_rejected(tmp: Path) -> None:
+    long_path = "/" + ("x" * 108)
+    cases = [
+        "",
+        str(tmp / "only-one.sock"),
+        f",{tmp / 'api2.sock'}",
+        f"{tmp / 'api1.sock'},",
+        f"{tmp / 'api1.sock'},{tmp / 'api2.sock'},{tmp / 'api3.sock'}",
+        f"{long_path},{tmp / 'api2.sock'}",
+        f"{tmp / 'api1.sock'},{long_path}",
+    ]
+    for idx, upstreams in enumerate(cases):
+        assert_exits_nonzero(
+            {"LB_MODE": "fdpass", "PORT": str(18200 + idx), "UPSTREAMS": upstreams},
+            needle=b"invalid",
+        )
+
+
+def test_invalid_port_uses_default(tmp: Path) -> None:
+    stop = threading.Event()
+    s1 = tmp / "default-port-fd1.sock"
+    s2 = tmp / "default-port-fd2.sock"
+    fdpass_server(s1, b"fdpass-1", stop)
+    fdpass_server(s2, b"fdpass-2", stop)
+    deadline = time.time() + 2
+    while time.time() < deadline and not (s1.exists() and s2.exists()):
+        time.sleep(0.01)
+    proc = run_lb({"LB_MODE": "fdpass", "PORT": "70000", "BACKLOG": "0", "UPSTREAMS": f"{s1},{s2}"})
+    try:
+        wait_tcp(9999)
+        out = http_get(9999)
         assert b"HTTP/1.1 200 OK" in out, out
         assert b"fdpass-" in out, out
     finally:
@@ -226,10 +327,20 @@ def test_fdpass(tmp: Path) -> None:
 
 
 def main() -> None:
+    modes = {m.strip() for m in os.environ.get("LB_TEST_MODES", "proxy,fdpass").split(",") if m.strip()}
     with tempfile.TemporaryDirectory() as d:
         tmp = Path(d)
-        test_proxy(tmp)
-        test_fdpass(tmp)
+        if "proxy" in modes:
+            test_proxy(tmp)
+        if "fdpass" in modes:
+            test_fdpass(tmp)
+            test_fdpass(tmp, socket.SOCK_STREAM, {"LB_FDPASS_SOCKET_TYPE": "stream"})
+        if "invalid-lb-mode" in modes:
+            test_invalid_lb_modes(tmp)
+        if "bad-upstreams" in modes:
+            test_bad_upstreams_rejected(tmp)
+        if "parse-dec" in modes:
+            test_invalid_port_uses_default(tmp)
     print("integration tests passed")
 
 
