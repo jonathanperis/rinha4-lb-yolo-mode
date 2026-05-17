@@ -6,11 +6,12 @@
 make clean test
 ```
 
-The test target builds the load balancer and runs local integration checks against dummy Unix-socket backends.
+The test target builds the C and ASM load balancers, then runs local integration checks against dummy Unix-socket backends.
 
 ```sh
 make clean all            # default ASM binary: build/rinha4-lb-yolo-mode
 make asm                  # build/rinha4-lb-yolo-mode-asm
+make c                    # build/rinha4-lb-yolo-mode-c
 ```
 
 ## Use the promoted ASM image
@@ -29,6 +30,23 @@ services:
 ```
 
 `latest` is ASM. For a pinned rollout, prefer `asm-ci-<sha>` or a release tag.
+
+## Use the C baseline image
+
+```yaml
+services:
+  lb:
+    image: ghcr.io/jonathanperis/rinha4-lb-yolo-mode:c-ci-<sha>
+    platform: linux/amd64
+    environment:
+      LB_MODE: proxy
+      PORT: "9999"
+      UPSTREAMS: /sockets/api1.sock,/sockets/api2.sock
+    ports:
+      - "9999:9999"
+```
+
+Use the C image only for comparison and fallback experiments. `c-latest` exists, but repeatable benchmark runs should pin `c-ci-<sha>`.
 
 ## Use fdpass mode
 
@@ -59,6 +77,7 @@ environment:
 
 ```sh
 docker build --build-arg LB_IMPL=asm -t rinha4-lb-yolo-mode:asm .
+docker build --build-arg LB_IMPL=c   -t rinha4-lb-yolo-mode:c .
 ```
 
 Docker access is required for image builds. The repository integration tests do not require Docker.

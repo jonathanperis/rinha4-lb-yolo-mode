@@ -11,7 +11,7 @@ CFLAGS_COMMON := -std=c11 -O3 -DNDEBUG $(CFLAGS_ARCH) $(CFLAGS_WARN)
 LDFLAGS_COMMON :=
 ASMFLAGS_COMMON := -O3 -nostdlib -static -no-pie $(ASMFLAGS_ARCH)
 
-.PHONY: all c asm clean test test-c test-asm
+.PHONY: all c asm clean test test-c test-asm docs-drift
 
 all: $(TARGET)
 
@@ -31,7 +31,10 @@ $(ASM_TARGET): src/yolo_lb_fdpass.S | $(BUILD_DIR)
 $(TARGET): $(if $(filter asm,$(LB_IMPL)),$(ASM_TARGET),$(C_TARGET)) | $(BUILD_DIR)
 	cp $< $@
 
-test: test-c test-asm
+test: docs-drift test-c test-asm
+
+docs-drift:
+	python3 scripts/check_docs_drift.py
 
 test-c: $(C_TARGET)
 	python3 tests/integration_test.py $(C_TARGET)
