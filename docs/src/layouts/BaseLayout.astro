@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = 'rinha4-lb-yolo-mode | YOLO Load Balancer',
-  description = 'Promoted ASM Rinha4 load balancer docs and C baseline comparison lane.',
+  description = 'Promoted ASM Rinha4 load balancer docs and comparison lane.',
 } = Astro.props;
 
 const pageUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : `https://jonathanperis.github.io${Astro.url.pathname}`;
@@ -22,7 +22,7 @@ const jsonLd = {
   description,
   url: pageUrl,
   codeRepository: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode',
-  programmingLanguage: ['C', 'x86-64 assembly'],
+  programmingLanguage: ['x86-64 assembly'],
   runtimePlatform: 'Linux / Docker',
   license: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode/blob/main/LICENSE',
   author: { '@type': 'Person', name: 'Jonathan Peris', url: 'https://github.com/jonathanperis' }
@@ -39,7 +39,7 @@ const jsonLd = {
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;650;800&family=Sometype+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/svg+xml" href={asset('/title-mark.svg')} />
     <meta name="description" content={description} />
-    <meta name="keywords" content="Rinha de Backend, load balancer, C, assembly, fd passing, k6, benchmark" />
+    <meta name="keywords" content="Rinha de Backend, load balancer, assembly, fd passing, k6, benchmark" />
     <link rel="canonical" href={pageUrl} />
     <meta name="theme-color" content="#111417" />
     <meta property="og:type" content="website" />

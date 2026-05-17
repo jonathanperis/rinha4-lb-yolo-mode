@@ -14,7 +14,7 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
   <div class="section-kicker">runtime contracts</div>
   <div class="section-heading-row">
     <h2 id="topology-title">One ASM default, two transport contracts.</h2>
-    <p>The promoted binary keeps the C baseline's external shape: proxy for raw Unix HTTP APIs, fdpass for accepted-socket APIs.</p>
+    <p>The promoted binary exposes proxy for raw Unix HTTP APIs and fdpass for accepted-socket APIs.</p>
   </div>
 
   <div class="topology-grid">
@@ -24,14 +24,14 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
       <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:latest
   ├─ LB_MODE=proxy
   └─ LB_MODE=fdpass</code></pre>
-      <p>Used by downstream stacks unless a comparison run deliberately pins the C baseline.</p>
+      <p>Used by downstream stacks and pinned by tag for repeatable comparison runs.</p>
     </article>
     <article class="topology-card c-card">
-      <span class="mode-label">baseline image</span>
-      <h3>Retained C path</h3>
-      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:c-ci-&lt;sha&gt;
-  └─ compare against asm-ci-&lt;sha&gt;</code></pre>
-      <p>Used to prove that ASM keeps correctness and latency at or above the old default.</p>
+      <span class="mode-label">pinned image</span>
+      <h3>Repeatable ASM path</h3>
+      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-&lt;sha&gt;
+  └─ compare across stack variants</code></pre>
+      <p>Used to prove that the shared ASM LB keeps correctness and latency stable across downstream stacks.</p>
     </article>
   </div>
 </section>
@@ -40,24 +40,24 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
   <div class="section-kicker">comparison matrix</div>
   <div class="section-heading-row">
     <h2 id="evidence-title">Promotion did not remove the benchmark gate.</h2>
-    <p>Every stack still needs a clean C-vs-ASM lane before a downstream rollout is considered stable.</p>
+    <p>Every stack still needs repeated clean runs before a downstream rollout is considered stable.</p>
   </div>
 
   <div class="matrix-grid">
     <div class="matrix-cell">
       <span>dotnet</span>
       <strong>ASM default</strong>
-      <strong>C baseline</strong>
+      <strong>Pinned ASM</strong>
     </div>
     <div class="matrix-cell">
-      <span>C</span>
+      <span>fdpass</span>
       <strong>ASM fdpass</strong>
-      <strong>C fdpass</strong>
+      <strong>Pinned fdpass</strong>
     </div>
     <div class="matrix-cell">
       <span>assembly</span>
       <strong>ASM shared LB</strong>
-      <strong>baseline lane</strong>
+      <strong>pinned lane</strong>
     </div>
   </div>
 

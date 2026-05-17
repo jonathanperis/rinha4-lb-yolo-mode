@@ -279,7 +279,7 @@ handoff:
 # Simple single-connection proxy for SOCK_STREAM Unix upstreams. It forwards the
 # currently available HTTP request bytes, then relays response bytes until the
 # upstream closes or remains idle briefly. This is intentionally small and keeps
-# the ASM target dependency-free; the C target remains the high-throughput proxy.
+# the ASM target dependency-free while preserving the proxy contract.
 proxy_handoff:
     push rdi
     push rsi

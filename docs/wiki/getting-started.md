@@ -6,13 +6,11 @@
 make clean test
 ```
 
-The test target builds both implementations and runs local integration checks against dummy Unix-socket backends.
+The test target builds the load balancer and runs local integration checks against dummy Unix-socket backends.
 
 ```sh
 make clean all            # default ASM binary: build/rinha4-lb-yolo-mode
-make clean all LB_IMPL=c  # C baseline binary: build/rinha4-lb-yolo-mode
 make asm                  # build/rinha4-lb-yolo-mode-asm
-make c                    # build/rinha4-lb-yolo-mode-c
 ```
 
 ## Use the promoted ASM image
@@ -57,11 +55,10 @@ environment:
   UPSTREAMS: /run/rinha/api1.sock,/run/rinha/api2.sock
 ```
 
-## Build baseline images locally
+## Build the image locally
 
 ```sh
 docker build --build-arg LB_IMPL=asm -t rinha4-lb-yolo-mode:asm .
-docker build --build-arg LB_IMPL=c -t rinha4-lb-yolo-mode:c .
 ```
 
 Docker access is required for image builds. The repository integration tests do not require Docker.

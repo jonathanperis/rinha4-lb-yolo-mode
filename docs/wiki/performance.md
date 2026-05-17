@@ -1,25 +1,21 @@
-# Performance
+# Performance Notes
 
-Performance conclusions must be drawn from repeated official-like comparisons because GitHub-hosted runners are noisy.
+The ASM LB is promoted because it should reduce transport overhead without changing the backend contract.
 
-The current default is ASM, but the decision rule does not relax:
+## Promotion gates
 
 1. zero correctness regressions and zero unexpected HTTP errors;
-2. equal or lower p99 latency versus the C LB for .NET, C, and assembly stacks;
+2. equal or lower p99 latency across downstream stacks;
 3. stable behavior across repeated workflow runs;
-4. no contract drift that forces API-specific hacks into the shared LB.
+4. no hidden socket-contract changes in compose files.
 
-The LB itself should stay payload-agnostic. It wins only by reducing accept, Unix-socket, fd-passing, and byte-forwarding overhead.
+## What to watch
 
-## Reading results
+- `LB_MODE=proxy` should not parse payloads or add per-request logs.
+- `LB_MODE=fdpass` should close the LB-owned accepted FD after handoff.
+- `LB_FDPASS_SOCKET_TYPE` must match the backend control socket.
+- GitHub-hosted runners are noisy, so one lucky p99 should not decide a promotion.
 
-Use this order:
+## Tag discipline
 
-1. Verify every participant reached a clean score gate: no false positives, no false negatives, no HTTP errors.
-2. Confirm the image tags and socket contracts for that run.
-3. Compare p99 only inside the same lane: CI-vs-CI or official-vs-official.
-4. Repeat close calls before changing defaults in downstream repos.
-
-## Default image rule
-
-`latest` and release tags are ASM. Baseline comparisons should pin a C image explicitly with `c-ci-<sha>` or `c-latest`; never assume `latest` means C after this promotion.
+`latest` and release tags are ASM. Benchmark runs that need repeatability should pin `asm-ci-<sha>` or a release tag instead of relying on a moving pointer.
