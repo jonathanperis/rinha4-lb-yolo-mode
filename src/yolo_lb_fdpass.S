@@ -119,14 +119,6 @@ accept_loop:
     js accept_loop
     mov r13, rax
 
-    mov rax, SYS_SETSOCKOPT
-    mov rdi, r13
-    mov rsi, IPPROTO_TCP
-    mov rdx, TCP_NODELAY
-    lea r10, [rip + optval]
-    mov r8, 4
-    syscall
-
     mov rax, qword ptr [rip + rr_next]
     xor rax, 1
     mov qword ptr [rip + rr_next], rax
@@ -512,20 +504,8 @@ connect_once:
 # rdi = unix control socket, rsi = client fd. Returns 0 on success, -1 on failure.
 send_fd:
     push rdi
-    mov qword ptr [rip + iov_base], OFFSET FLAT:send_byte
-    mov qword ptr [rip + iov_len], 1
-    mov qword ptr [rip + msg_name], 0
-    mov qword ptr [rip + msg_namelen], 0
-    mov qword ptr [rip + msg_iov], OFFSET FLAT:iov_base
-    mov qword ptr [rip + msg_iovlen], 1
-    mov qword ptr [rip + msg_control], OFFSET FLAT:cmsg_buf
-    mov qword ptr [rip + msg_controllen], 24
-    mov qword ptr [rip + msg_flags], 0
-    mov qword ptr [rip + cmsg_buf], 20
-    mov dword ptr [rip + cmsg_buf + 8], SOL_SOCKET
-    mov dword ptr [rip + cmsg_buf + 12], SCM_RIGHTS
+    # msghdr/iovec/cmsghdr are preinitialized in .data; only the fd changes.
     mov dword ptr [rip + cmsg_buf + 16], esi
-    mov dword ptr [rip + cmsg_buf + 20], 0
 
     mov r8d, 16
 send_fd_try:
@@ -850,6 +830,25 @@ api2_addr:
     .asciz "/run/rinha/api2.sock"
     .zero 108 - (. - api2_addr - 2)
 
+.section .data
+.align 8
+iov_base: .quad send_byte
+iov_len: .quad 1
+msg_name: .quad 0
+msg_namelen: .quad 0
+msg_iov: .quad iov_base
+msg_iovlen: .quad 1
+msg_control: .quad cmsg_buf
+msg_controllen: .quad 24
+msg_flags: .quad 0
+cmsg_buf:
+    .quad 20
+    .long SOL_SOCKET
+    .long SCM_RIGHTS
+    .long 0
+    .long 0
+    .zero 8
+
 .section .bss
 .align 16
 sockaddr_in: .skip 16
@@ -867,14 +866,4 @@ upstream2_fd: .skip 8
 rr_next: .skip 8
 rlimit_buf: .skip 16
 .align 8
-iov_base: .skip 8
-iov_len: .skip 8
-msg_name: .skip 8
-msg_namelen: .skip 8
-msg_iov: .skip 8
-msg_iovlen: .skip 8
-msg_control: .skip 8
-msg_controllen: .skip 8
-msg_flags: .skip 8
-cmsg_buf: .skip 32
 proxy_buf: .skip 16384
