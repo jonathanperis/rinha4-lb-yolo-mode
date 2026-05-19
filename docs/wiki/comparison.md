@@ -1,17 +1,13 @@
 # Comparison Lane
 
-The comparison workflow benchmarks the promoted ASM LB against the C baseline across the Rinha4 implementation families.
+The active comparison branch is intentionally narrow: it benchmarks the promoted shared ASM LB against the C baseline for the standalone YOLO/assembly API lane. Older archived results may include .NET and C API lanes, but the current workflow keeps only the participants we are actively chasing.
 
 | Participant | Purpose |
 | --- | --- |
-| `dotnet-c-lb` | .NET API behind the C baseline LB. |
-| `dotnet-asm-lb` | .NET API behind the promoted ASM LB. |
-| `c-c-lb` | C API behind the C baseline LB. |
-| `c-asm-lb` | C API behind the promoted ASM LB. |
-| `yolo-current-lb` | YOLO/assembly API behind its currently pinned stack LB. |
-| `yolo-standalone-asm-lb` | Assembly backend behind the standalone/shared ASM LB; this lane may be experimental while socket contracts are being tuned. |
+| `yolo-c-lb` | YOLO/assembly API behind the C baseline LB. |
+| `yolo-standalone-asm-lb` | YOLO/assembly API behind the promoted standalone/shared ASM LB. |
 
-The main workflow's matrix writes participant artifacts and then summarizes them into `comparison-results/latest.json`. The Pages workflow copies that file into `docs/public/comparison/latest.json` when it exists so the site can render the latest table.
+The comparison branch workflow writes participant artifacts and then summarizes them into `comparison-results/latest.json`. The Pages workflow copies that file into `docs/public/comparison/latest.json` when it exists so the site can render the latest table.
 
 ## Branch shape
 

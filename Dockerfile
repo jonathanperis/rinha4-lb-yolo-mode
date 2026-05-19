@@ -1,5 +1,7 @@
 FROM alpine:3.20 AS build
 
+# Build the promoted ASM image by default. CI also builds the C baseline by
+# overriding LB_IMPL=c, which keeps C-vs-ASM comparisons reproducible.
 ARG LB_IMPL=asm
 RUN apk add --no-cache build-base
 WORKDIR /src

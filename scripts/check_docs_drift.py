@@ -52,7 +52,8 @@ def main() -> None:
     # Image contract from build workflow.
     for tag in ["asm-ci-${{ github.sha }}", "c-ci-${{ github.sha }}", "c-latest", "${{ steps.semver.outputs.version }}"]:
         require(build_workflow, tag, ".github/workflows/build.yml")
-    require(benchmark_workflow, ":c-ci-${{ inputs.lb_sha || github.sha }}", ".github/workflows/benchmark.yml")
+    require(benchmark_workflow, "lb_c_image", ".github/workflows/benchmark.yml")
+    require(benchmark_workflow, "lb_asm_image", ".github/workflows/benchmark.yml")
     forbid(benchmark_workflow, ":ci-${{ inputs.lb_sha || github.sha }}", ".github/workflows/benchmark.yml")
     for doc_name, text in {
         "README.md": readme,
@@ -83,8 +84,8 @@ def main() -> None:
         else:
             require(readme + getting_started, target, "README/getting-started docs")
 
-    # Comparison participants from workflow must appear in comparison docs.
-    participants = re.findall(r"participant: ([a-z0-9-]+)", benchmark_workflow)
+    # Active comparison-branch participants from the workflow must appear in comparison docs.
+    participants = re.findall(r"^\s*-?\s*name: ([a-z0-9-]+)$", benchmark_workflow, re.MULTILINE)
     if not participants:
         fail("could not parse benchmark workflow participants")
     for participant in participants:

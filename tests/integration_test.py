@@ -26,6 +26,24 @@ def wait_tcp(port: int, timeout: float = 3.0) -> None:
     raise RuntimeError(f"port {port} did not open: {last}")
 
 
+def wait_paths(*paths: Path, timeout: float = 2.0) -> None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if all(path.exists() for path in paths):
+            return
+        time.sleep(0.01)
+    missing = ", ".join(str(path) for path in paths if not path.exists())
+    raise RuntimeError(f"socket path(s) did not appear: {missing}")
+
+
+def stop_process(proc: subprocess.Popen) -> None:
+    proc.terminate()
+    try:
+        proc.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
 def http_get(port: int) -> bytes:
     with socket.create_connection(("127.0.0.1", port), timeout=2) as s:
         s.sendall(b"GET /ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
@@ -200,9 +218,7 @@ def test_proxy(tmp: Path) -> None:
     s2 = tmp / "api2.sock"
     unix_http_server(s1, b"proxy-1", stop)
     unix_http_server(s2, b"proxy-2", stop)
-    deadline = time.time() + 2
-    while time.time() < deadline and not (s1.exists() and s2.exists()):
-        time.sleep(0.01)
+    wait_paths(s1, s2)
     port = 18081
     proc = run_lb({"LB_MODE": "proxy", "PORT": str(port), "UPSTREAMS": f"{s1},{s2}"})
     try:
@@ -214,11 +230,7 @@ def test_proxy(tmp: Path) -> None:
         assert b"HTTP/1.1 200 OK" in split, split
         assert b"proxy-" in split, split
     finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+        stop_process(proc)
         stop.set()
 
 
@@ -229,9 +241,7 @@ def test_fdpass(tmp: Path, sock_type: int = socket.SOCK_SEQPACKET, extra_env: di
     fdpass_server(s1, b"fdpass-1", stop, sock_type)
     fdpass_server(s2, b"fdpass-2", stop, sock_type)
     # Give control sockets a moment to bind; fdpass mode connects before listening.
-    deadline = time.time() + 2
-    while time.time() < deadline and not (s1.exists() and s2.exists()):
-        time.sleep(0.01)
+    wait_paths(s1, s2)
     port = 18082
     env = {"LB_MODE": "fdpass", "PORT": str(port), "UPSTREAMS": f"{s1},{s2}"}
     if extra_env:
@@ -251,11 +261,7 @@ def test_fdpass(tmp: Path, sock_type: int = socket.SOCK_SEQPACKET, extra_env: di
         joined = b"\n".join(bodies)
         assert b"fdpass-1" in joined and b"fdpass-2" in joined, joined
     finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+        stop_process(proc)
         stop.set()
 
 
@@ -308,9 +314,7 @@ def test_invalid_port_uses_default(tmp: Path) -> None:
     s2 = tmp / "default-port-fd2.sock"
     fdpass_server(s1, b"fdpass-1", stop)
     fdpass_server(s2, b"fdpass-2", stop)
-    deadline = time.time() + 2
-    while time.time() < deadline and not (s1.exists() and s2.exists()):
-        time.sleep(0.01)
+    wait_paths(s1, s2)
     proc = run_lb({"LB_MODE": "fdpass", "PORT": "70000", "BACKLOG": "0", "UPSTREAMS": f"{s1},{s2}"})
     try:
         wait_tcp(9999)
@@ -318,11 +322,7 @@ def test_invalid_port_uses_default(tmp: Path) -> None:
         assert b"HTTP/1.1 200 OK" in out, out
         assert b"fdpass-" in out, out
     finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+        stop_process(proc)
         stop.set()
 
 

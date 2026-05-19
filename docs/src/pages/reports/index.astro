@@ -9,7 +9,7 @@ try {
 } catch {
   comparison = null;
 }
-const participants = Array.isArray(comparison?.participants) ? comparison.participants : [];
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : (Array.isArray(comparison?.results) ? comparison.results : []);
 const rows = participants;
 const fmt = (value: any) => value === undefined || value === null || value === '' ? 'not recorded' : String(value);
 const score = (row: any) => fmt(row.final_score ?? row.score ?? row.summary?.final_score);
@@ -65,9 +65,9 @@ const errors = (row: any) => fmt(row.http_errors ?? row.summary?.http_errors);
         <span class="status-pill pending">waiting for run</span>
         <h2>No comparison summary is archived yet.</h2>
         <p>
-          The benchmark workflow writes <code>comparison-results/latest.json</code>. The Pages workflow copies it to <code>docs/public/comparison/latest.json</code> before building this route.
+          Dispatch the benchmark workflow on the <code>comparison</code> branch. It writes <code>comparison-results/latest.json</code>, and the Pages workflow copies that file to <code>docs/public/comparison/latest.json</code> before building this route.
         </p>
-        <a class="button primary" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open GitHub benchmark workflow</a>
+        <a class="button primary" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open comparison workflow</a>
       </section>
     )}
   </main>

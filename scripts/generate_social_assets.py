@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / "docs" / "public"
@@ -21,7 +21,6 @@ CYAN = (96, 211, 238)
 VIOLET = (181, 118, 240)
 COPPER = (231, 169, 83)
 GREEN = (96, 221, 154)
-RED = (241, 102, 79)
 MARK_BG = (15, 16, 17)
 MARK_BAR = (85, 85, 85)
 MARK_DOT = (196, 196, 196)
@@ -36,7 +35,7 @@ def font(path: Path, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(str(path), size=size)
 
 
-def rounded(draw: ImageDraw.ImageDraw, xy: tuple[int, int, int, int], radius: int, fill, outline=None, width: int = 1):
+def rounded(draw: ImageDraw.ImageDraw, xy: tuple[int, int, int, int], radius: int, fill, outline=None, width: int = 1) -> None:
     draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
 
 

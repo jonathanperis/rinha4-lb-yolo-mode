@@ -24,6 +24,16 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+/*
+ * Readable C baseline for the shared Rinha4 LB.
+ *
+ * The default production image is the assembly implementation, but this file is
+ * intentionally kept as a conventional C reference: it documents the two
+ * supported contracts and gives CI a second implementation to compare against.
+ * Keep this baseline simple; do not make it more generic unless a benchmarked
+ * downstream compose actually needs the extra behavior.
+ */
+
 #define MAX_UPSTREAMS 16
 #define MAX_UPSTREAM_PATH 108
 #define DEFAULT_PORT 9999
@@ -138,12 +148,14 @@ static int listen_tcp(int port, int backlog) {
 }
 
 static int fdpass_socket_type(void) {
+    /* .NET/YOLO use stream control sockets; the C backend uses seqpacket. */
     const char *value = env_or("LB_FDPASS_SOCKET_TYPE", "seqpacket");
     if (streq_ci(value, "stream")) return SOCK_STREAM;
     return SOCK_SEQPACKET;
 }
 
 static int connect_unix_fdpass(const char *path) {
+    /* Control sockets are nonblocking because sendmsg() can backpressure. */
     int fd = socket(AF_UNIX, fdpass_socket_type() | SOCK_CLOEXEC, 0);
     if (fd < 0) return -1;
 
@@ -234,6 +246,11 @@ typedef struct {
 static fdpass_upstream_t g_fdpass_upstreams[MAX_UPSTREAMS];
 
 static int send_fd(int socket_fd, int passed_fd) {
+    /*
+     * SCM_RIGHTS handoff: pass the accepted TCP client fd to an API worker.
+     * The client fd itself must stay blocking; assembly-style backends do a
+     * direct blocking read() and would treat EAGAIN as a closed client.
+     */
     char byte = 1;
     struct iovec iov;
     iov.iov_base = &byte;
@@ -308,6 +325,8 @@ static int fdpass_handoff(int idx, int client_fd) {
 }
 
 static int fdpass_handoff_with_retry(int first, int client_fd) {
+    /* Try the chosen worker first, then the others. A tiny retry window absorbs
+     * startup/reconnect races without adding per-request state machines. */
     for (int round = 0; round < 8; ++round) {
         for (int offset = 0; offset < g_upstream_count; ++offset) {
             int idx = (first + offset + round) % g_upstream_count;
@@ -319,6 +338,7 @@ static int fdpass_handoff_with_retry(int first, int client_fd) {
 }
 
 static int run_fdpass(void) {
+    /* Fast path for fd-aware APIs: accept, hand the fd over SCM_RIGHTS, close. */
     parse_upstreams("/run/rinha/api1.sock,/run/rinha/api2.sock");
     fdpass_connect_all();
 
@@ -426,6 +446,8 @@ static int update_events_for_fd(int fd) {
     Conn *conn = ref.conn;
     if (conn == NULL) return -1;
 
+    /* Enable only directions that have buffer space/data. This keeps the proxy
+     * edge-trigger-free and avoids spinning on sockets that cannot progress. */
     uint32_t events = EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     if (ref.side == 0) {
         if (conn->c2b_len < BUFFER_SIZE) events |= EPOLLIN;
@@ -562,6 +584,9 @@ static void handle_fd(int fd, uint32_t events) {
 }
 
 static int run_proxy(void) {
+    /* Generic fallback for raw Unix-socket HTTP APIs. It is slower than fdpass
+     * because every byte is copied through the LB, but it keeps the repo usable
+     * with backends that cannot receive file descriptors. */
     parse_upstreams("/sockets/api1.sock,/sockets/api2.sock");
 
     int port = env_int("PORT", DEFAULT_PORT);

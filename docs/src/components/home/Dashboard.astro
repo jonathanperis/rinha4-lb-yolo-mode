@@ -6,7 +6,7 @@ try {
 } catch {
   comparison = null;
 }
-const participants = Array.isArray(comparison?.participants) ? comparison.participants : [];
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : (Array.isArray(comparison?.results) ? comparison.results : []);
 const hasComparison = participants.length > 0;
 const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
 ---
@@ -45,19 +45,14 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
 
   <div class="matrix-grid">
     <div class="matrix-cell">
-      <span>dotnet</span>
-      <strong>ASM default</strong>
-      <strong>Pinned ASM</strong>
+      <span>C baseline</span>
+      <strong>yolo-c-lb</strong>
+      <strong>c-ci-&lt;sha&gt;</strong>
     </div>
     <div class="matrix-cell">
-      <span>fdpass</span>
-      <strong>ASM fdpass</strong>
-      <strong>Pinned fdpass</strong>
-    </div>
-    <div class="matrix-cell">
-      <span>assembly</span>
-      <strong>ASM shared LB</strong>
-      <strong>pinned lane</strong>
+      <span>ASM promoted</span>
+      <strong>yolo-standalone-asm-lb</strong>
+      <strong>asm-ci-&lt;sha&gt;</strong>
     </div>
   </div>
 
@@ -73,8 +68,8 @@ const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
       <>
         <span class="status-pill pending">waiting for run</span>
         <h3>No comparison summary is archived yet.</h3>
-        <p>Dispatch the LB Comparison Benchmark workflow. When it writes <code>comparison-results/latest.json</code>, Pages will render it here and under reports.</p>
-        <a class="text-link" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open GitHub benchmark workflow</a>
+        <p>Dispatch the LB Comparison Benchmark workflow on the <code>comparison</code> branch. When it writes <code>comparison-results/latest.json</code>, Pages will render it here and under reports.</p>
+        <a class="text-link" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open comparison workflow</a>
       </>
     )}
   </article>

@@ -1,6 +1,11 @@
 .intel_syntax noprefix
 .global _start
 
+# Syscall-only LB used by the default container image. The shape is purposely
+# narrow: two upstream workers, no libc, no logging, no request parsing in
+# fdpass mode. That keeps the hot path to accept4 -> sendmsg(SCM_RIGHTS) ->
+# close, which is the contract the Rinha4 API containers are tuned for.
+
 .equ SYS_READ, 0
 .equ SYS_WRITE, 1
 .equ SYS_CLOSE, 3
@@ -56,6 +61,9 @@ _start:
     mov qword ptr [rip + upstream2_fd], rax
 
 setup_listener:
+    # Listener setup is shared by fdpass and proxy modes. fdpass accepts
+    # blocking client sockets; proxy mode accepts nonblocking sockets because
+    # the LB itself must read/write both sides.
     mov rax, SYS_SOCKET
     mov rdi, AF_INET
     mov rsi, SOCK_STREAM | SOCK_CLOEXEC
@@ -109,6 +117,8 @@ accept_loop:
     mov rdi, r12
     xor rsi, rsi
     xor rdx, rdx
+    # Do not add SOCK_NONBLOCK in fdpass mode. The received client fd is read
+    # directly by assembly-style APIs; an EAGAIN there looks like client EOF.
     mov r10, SOCK_CLOEXEC
     cmp dword ptr [rip + proxy_mode], 0
     je 1f
@@ -229,7 +239,8 @@ handoff:
     test rax, rax
     jz 9f
 
-    # reconnect selected upstream once and retry
+    # Reconnect selected upstream once and retry. If the preferred worker is
+    # down, the caller then tries the other worker before closing the client.
     cmp qword ptr [rsp + 8], 1
     je 4f
     mov rax, SYS_CLOSE
@@ -505,6 +516,7 @@ connect_once:
 send_fd:
     push rdi
     # msghdr/iovec/cmsghdr are preinitialized in .data; only the fd changes.
+    # This removes repeated structure stores from the per-request hot path.
     mov dword ptr [rip + cmsg_buf + 16], esi
 
     mov r8d, 16
@@ -549,6 +561,9 @@ send_fd_try:
     ret
 
 parse_env:
+    # Parse envp directly from the initial process stack. We only support the
+    # small set of knobs needed by CI/downstream composes; unknown env vars are
+    # ignored so container runtimes can inject their own metadata freely.
     mov rbx, qword ptr [rsp + 8]
     lea r14, [rsp + 24]
     lea r14, [r14 + rbx*8]         # envp = rsp_at_start + 8*(argc+2)
@@ -734,6 +749,9 @@ parse_dec:
     ret
 
 parse_upstreams:
+    # ASM intentionally supports exactly two upstream paths. More generic
+    # fan-out belongs in the C baseline; the fast binary keeps fixed storage and
+    # branch-free round-robin for the Rinha4 two-worker topology.
     push rdi
     lea rdi, [rip + api1_addr + 2]
     call zero_path

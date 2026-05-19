@@ -3,7 +3,10 @@ BUILD_DIR := build
 TARGET := $(BUILD_DIR)/rinha4-lb-yolo-mode
 C_TARGET := $(BUILD_DIR)/rinha4-lb-yolo-mode-c
 ASM_TARGET := $(BUILD_DIR)/rinha4-lb-yolo-mode-asm
+# ASM is the shipped default. The C binary stays buildable because CI and
+# comparison runs use it as a readable baseline against the syscall-only path.
 LB_IMPL ?= asm
+
 CFLAGS_WARN := -Wall -Wextra -Wshadow -Werror
 CFLAGS_ARCH ?=
 ASMFLAGS_ARCH ?= -march=x86-64-v3
