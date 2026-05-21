@@ -1,0 +1,102 @@
+services:
+  lb:
+    image: ${LB_ASM_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91}
+    platform: linux/amd64
+    pull_policy: always
+    user: root
+    environment:
+      LB_MODE: "fdpass"
+      LB_FDPASS_SOCKET_TYPE: "seqpacket"
+      LB_FDPASS_SNDBUF: "${LB_FDPASS_SNDBUF:-262144}"
+      PORT: "9999"
+      UPSTREAMS: "/run/rinha/api1.sock,/run/rinha/api2.sock"
+      BACKLOG: "65535"
+    ports:
+      - "9999:9999"
+    depends_on:
+      - api1
+      - api2
+    volumes:
+      - sockets:/run/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.08"
+          memory: "30M"
+
+  api1:
+    image: "${WEBAPI_IMAGE:-ghcr.io/jonathanperis/rinha4-back-end-c:ci-67120843b1d0c7609ac64ee3a307296141d9b6f5}"
+    command: ["/app/api"]
+    user: root
+    environment:
+      API_FD_SOCK: "/run/rinha/api1.sock"
+      INDEX_PATH: "/app/resources/index.bin"
+      INDEX_NPROBE: "${INDEX_NPROBE:-3}"
+      INDEX_REPAIR_NPROBE: "${INDEX_REPAIR_NPROBE:-24}"
+      INDEX_REPAIR_MIN_FRAUD: "${INDEX_REPAIR_MIN_FRAUD:-1}"
+      INDEX_REPAIR_MAX_FRAUD: "${INDEX_REPAIR_MAX_FRAUD:-4}"
+      INDEX_REPAIR0_WORST_THRESHOLD: "${INDEX_REPAIR0_WORST_THRESHOLD:-4021242}"
+      INDEX_REPAIR5_WORST_THRESHOLD: "${INDEX_REPAIR5_WORST_THRESHOLD:-3748534}"
+      INDEX_EXACT_FALLBACK: "${INDEX_EXACT_FALLBACK:-0}"
+      MALLOC_ARENA_MAX: "1"
+    volumes:
+      - sockets:/run/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.46"
+          memory: "160M"
+
+  api2:
+    image: "${WEBAPI_IMAGE:-ghcr.io/jonathanperis/rinha4-back-end-c:ci-67120843b1d0c7609ac64ee3a307296141d9b6f5}"
+    command: ["/app/api"]
+    user: root
+    environment:
+      API_FD_SOCK: "/run/rinha/api2.sock"
+      INDEX_PATH: "/app/resources/index.bin"
+      INDEX_NPROBE: "${INDEX_NPROBE:-3}"
+      INDEX_REPAIR_NPROBE: "${INDEX_REPAIR_NPROBE:-24}"
+      INDEX_REPAIR_MIN_FRAUD: "${INDEX_REPAIR_MIN_FRAUD:-1}"
+      INDEX_REPAIR_MAX_FRAUD: "${INDEX_REPAIR_MAX_FRAUD:-4}"
+      INDEX_REPAIR0_WORST_THRESHOLD: "${INDEX_REPAIR0_WORST_THRESHOLD:-4021242}"
+      INDEX_REPAIR5_WORST_THRESHOLD: "${INDEX_REPAIR5_WORST_THRESHOLD:-3748534}"
+      INDEX_EXACT_FALLBACK: "${INDEX_EXACT_FALLBACK:-0}"
+      MALLOC_ARENA_MAX: "1"
+    volumes:
+      - sockets:/run/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.46"
+          memory: "160M"
+
+networks:
+  rinha:
+    driver: bridge
+
+volumes:
+  sockets:

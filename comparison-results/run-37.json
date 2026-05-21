@@ -1,0 +1,84 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "e94b7d7e2e671f73b5f308d14cac341b95aca2db",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-dotnet-asm-lb-37",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-dotnet-asm-lb-37",
+        "compose_file": "competitor-compose/dotnet-asm-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "dotnet-asm-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25974206654"
+      },
+      "p99": "0.31ms",
+      "participant": "dotnet-asm-lb"
+    },
+    {
+      "artifact": "rinha-benchmark-dotnet-c-lb-37",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-dotnet-c-lb-37",
+        "compose_file": "competitor-compose/dotnet-c-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "dotnet-c-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25974206654"
+      },
+      "p99": "0.30ms",
+      "participant": "dotnet-c-lb"
+    },
+    {
+      "artifact": "rinha-benchmark-yolo-c-lb-37",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-yolo-c-lb-37",
+        "compose_file": "competitor-compose/yolo-c-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "yolo-c-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25974206654"
+      },
+      "p99": "0.37ms",
+      "participant": "yolo-c-lb"
+    },
+    {
+      "artifact": "rinha-benchmark-yolo-standalone-asm-lb-37",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-yolo-standalone-asm-lb-37",
+        "compose_file": "competitor-compose/yolo-standalone-asm-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "yolo-standalone-asm-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25974206654"
+      },
+      "p99": "0.43ms",
+      "participant": "yolo-standalone-asm-lb"
+    }
+  ],
+  "run_id": "25974206654",
+  "run_number": "37"
+}

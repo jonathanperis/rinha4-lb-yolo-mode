@@ -1,0 +1,26 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "1cf46b2987dacf6f6006c77f1a0f1e4aeef2d4c0",
+  "results": [
+    {
+      "artifact": "benchmark-results-yolo-c-lb",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.42ms",
+      "participant": "yolo-c-lb"
+    },
+    {
+      "artifact": "benchmark-results-yolo-standalone-asm-lb",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "p99": "0.41ms",
+      "participant": "yolo-standalone-asm-lb"
+    }
+  ],
+  "run_id": "26073182931",
+  "run_number": "43"
+}

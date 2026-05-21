@@ -1,0 +1,48 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "0f2766a8101599bc48db5c52d1a5c51e6bb3eac6",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-yolo-c-lb-42",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-yolo-c-lb-42",
+        "benchmark_k6_mode": "native",
+        "compose_file": "competitor-compose/yolo-c-lb/docker-compose.yml",
+        "lb_asm_image": "",
+        "lb_c_image": "",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "yolo-c-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25998473855"
+      },
+      "p99": "0.43ms",
+      "participant": "yolo-c-lb"
+    },
+    {
+      "artifact": "rinha-benchmark-yolo-standalone-asm-lb-42",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-yolo-standalone-asm-lb-42",
+        "benchmark_k6_mode": "native",
+        "compose_file": "competitor-compose/yolo-standalone-asm-lb/docker-compose.yml",
+        "lb_asm_image": "",
+        "lb_c_image": "",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "yolo-standalone-asm-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25998473855"
+      },
+      "p99": "0.44ms",
+      "participant": "yolo-standalone-asm-lb"
+    }
+  ],
+  "run_id": "25998473855",
+  "run_number": "42"
+}

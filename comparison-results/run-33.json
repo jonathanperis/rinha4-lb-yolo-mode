@@ -1,0 +1,46 @@
+{
+  "event_name": "workflow_dispatch",
+  "head_sha": "1150f2f0ce3a0659ba6c64d45db25a26b2a4792c",
+  "results": [
+    {
+      "artifact": "rinha-benchmark-dotnet-asm-lb-33",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-dotnet-asm-lb-33",
+        "compose_file": "competitor-compose/dotnet-asm-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "dotnet-asm-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25973598531"
+      },
+      "p99": "0.32ms",
+      "participant": "dotnet-asm-lb"
+    },
+    {
+      "artifact": "rinha-benchmark-dotnet-c-lb-33",
+      "failure_rate": "0%",
+      "false_negative_detections": 0,
+      "false_positive_detections": 0,
+      "final_score": 6000,
+      "http_errors": 0,
+      "metadata": {
+        "artifact_name": "rinha-benchmark-dotnet-c-lb-33",
+        "compose_file": "competitor-compose/dotnet-c-lb/docker-compose.yml",
+        "lb_asm_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_c_image": "ghcr.io/jonathanperis/rinha4-lb-yolo-mode:ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91",
+        "lb_fdpass_sndbuf": "262144",
+        "participant": "dotnet-c-lb",
+        "run_url": "https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/runs/25973598531"
+      },
+      "p99": "0.31ms",
+      "participant": "dotnet-c-lb"
+    }
+  ],
+  "run_id": "25973598531",
+  "run_number": "33"
+}

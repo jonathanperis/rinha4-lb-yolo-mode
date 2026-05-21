@@ -1,0 +1,75 @@
+services:
+  lb:
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-9d6cbda5f9d2819fdc2c71e9a3f695ab785021ec"
+    command: ["/app/lb"]
+    platform: linux/amd64
+    pull_policy: always
+    ports:
+      - "9999:9999"
+    depends_on:
+      - api1
+      - api2
+    volumes:
+      - sockets:/tmp/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.08"
+          memory: "30M"
+
+  api1:
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-9d6cbda5f9d2819fdc2c71e9a3f695ab785021ec"
+    command: ["/app/api", "/tmp/rinha/api1.sock"]
+    platform: linux/amd64
+    pull_policy: always
+    volumes:
+      - sockets:/tmp/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.46"
+          memory: "160M"
+
+  api2:
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-9d6cbda5f9d2819fdc2c71e9a3f695ab785021ec"
+    command: ["/app/api", "/tmp/rinha/api2.sock"]
+    platform: linux/amd64
+    pull_policy: always
+    volumes:
+      - sockets:/tmp/rinha
+    networks:
+      - rinha
+    logging:
+      driver: "none"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: "0.46"
+          memory: "160M"
+
+networks:
+  rinha:
+    driver: bridge
+
+volumes:
+  sockets:
