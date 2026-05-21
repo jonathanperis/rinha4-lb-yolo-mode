@@ -1,0 +1,30 @@
+# Comparison Lane
+
+The active comparison branch is intentionally narrow: it benchmarks the promoted shared ASM LB against the C baseline for the standalone YOLO/assembly API lane. Older archived results may include .NET and C API lanes, but the current workflow keeps only the participants we are actively chasing.
+
+| Participant | Purpose |
+| --- | --- |
+| `yolo-c-lb` | YOLO/assembly API behind the C baseline LB. |
+| `yolo-standalone-asm-lb` | YOLO/assembly API behind the promoted standalone/shared ASM LB. |
+
+The comparison branch workflow writes participant artifacts and then summarizes them into `comparison-results/latest.json`. The Pages workflow copies that file into `docs/public/comparison/latest.json` when it exists so the site can render the latest table.
+
+## Branch shape
+
+The `comparison` branch should stay a lean benchmark harness. It normally tracks only:
+
+- `.github/workflows/benchmark.yml`;
+- `LICENSE`;
+- `competitor-compose/**`;
+- `comparison-results/**`.
+
+Do not merge `main` wholesale into `comparison` just to refresh the harness. Copy or cherry-pick only the workflow, compose files, and archived results that belong to the benchmark lane.
+
+## Evidence rules
+
+- Pin image tags for every participant.
+- Use `asm-ci-<sha>` for ASM lanes and `c-ci-<sha>` for C baseline lanes; prefer matching SHAs when the comparison is meant to isolate implementation differences.
+- Keep `latest` and `c-latest` out of comparisons unless the test is explicitly about the current moving pointer.
+- Record whether the fdpass socket contract is `seqpacket` or `stream`.
+- Keep CI-vs-CI and official-vs-official conclusions separate.
+- Reject correctness failures before evaluating p99.

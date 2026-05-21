@@ -1,0 +1,37 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-copy">
+    <p class="eyebrow">Rinha4 ASM load balancer</p>
+    <h1 id="hero-title">ASM is now the default YOLO load balancer.</h1>
+    <p class="tagline">
+      A shared transport bench for the Rinha4 stacks. The promoted image is x86-64 assembly and is the default target for regression and benchmark runs.
+    </p>
+    <div class="hero-actions" aria-label="Primary actions">
+      <a class="button primary" href={`${base}/docs/getting-started/`}>Use the ASM image</a>
+      <a class="button" href={`${base}/reports/`}>Open comparison lane</a>
+    </div>
+  </div>
+
+  <aside class="proof-rail" aria-label="Current load balancer state">
+    <div class="rail-header">
+      <span>transport/lb</span>
+      <strong>promoted default</strong>
+    </div>
+    <dl class="rail-list">
+      <div>
+        <dt>Default</dt>
+        <dd><code>latest</code> points at ASM</dd>
+      </div>
+      <div>
+        <dt>Pinned</dt>
+        <dd><code>asm-ci-&lt;sha&gt;</code> or release tags</dd>
+      </div>
+      <div>
+        <dt>Gate</dt>
+        <dd>clean score first, p99 second</dd>
+      </div>
+    </dl>
+  </aside>
+</section>

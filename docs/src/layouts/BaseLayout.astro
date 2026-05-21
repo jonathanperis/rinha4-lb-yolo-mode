@@ -1,0 +1,77 @@
+---
+import Analytics from '../components/Analytics.astro';
+import '../styles/globals.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'rinha4-lb-yolo-mode | YOLO Load Balancer',
+  description = 'Promoted ASM Rinha4 load balancer docs and comparison lane.',
+} = Astro.props;
+
+const siteUrl = Astro.site ?? new URL('https://jonathanperis.github.io');
+const pageUrl = new URL(Astro.url.pathname, siteUrl).href;
+const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const asset = (path: string) => `${base}${path}`;
+const socialImageUrl = new URL(`${basePath}social-preview.png`, siteUrl).href;
+const socialImageAlt = 'Dark technical rinha4-lb-yolo-mode social preview with YOLO load balancer topology.';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'rinha4-lb-yolo-mode',
+  description,
+  url: pageUrl,
+  codeRepository: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode',
+  programmingLanguage: ['x86-64 assembly'],
+  runtimePlatform: 'Linux / Docker',
+  license: 'https://github.com/jonathanperis/rinha4-lb-yolo-mode/blob/main/LICENSE',
+  author: { '@type': 'Person', name: 'Jonathan Peris', url: 'https://github.com/jonathanperis' }
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;650;800&family=Sometype+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href={asset('/favicon.ico')} sizes="any" />
+    <link rel="icon" type="image/png" href={asset('/favicon.png')} />
+    <link rel="icon" type="image/png" sizes="32x32" href={asset('/favicon-32x32.png')} />
+    <link rel="icon" type="image/svg+xml" href={asset('/title-mark.svg')} />
+    <link rel="apple-touch-icon" href={asset('/apple-touch-icon.png')} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content="Rinha de Backend, load balancer, assembly, fd passing, k6, benchmark" />
+    <link rel="canonical" href={pageUrl} />
+    <meta name="theme-color" content="#111417" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:site_name" content="rinha4-lb-yolo-mode" />
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:secure_url" content={socialImageUrl} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={socialImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content={socialImageAlt} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <Analytics />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,76 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+let comparison: any = null;
+try {
+  comparison = (await import('../../../public/comparison/latest.json')).default;
+} catch {
+  comparison = null;
+}
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : (Array.isArray(comparison?.results) ? comparison.results : []);
+const hasComparison = participants.length > 0;
+const generatedAt = comparison?.generated_at ?? comparison?.timestamp ?? null;
+---
+<section class="topology-section" aria-labelledby="topology-title">
+  <div class="section-kicker">runtime contracts</div>
+  <div class="section-heading-row">
+    <h2 id="topology-title">One ASM default, two transport contracts.</h2>
+    <p>The promoted binary exposes proxy for raw Unix HTTP APIs and fdpass for accepted-socket APIs.</p>
+  </div>
+
+  <div class="topology-grid">
+    <article class="topology-card asm-card">
+      <span class="mode-label">default image</span>
+      <h3>Promoted ASM path</h3>
+      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:latest
+  ├─ LB_MODE=proxy
+  └─ LB_MODE=fdpass</code></pre>
+      <p>Used by downstream stacks and pinned by tag for repeatable comparison runs.</p>
+    </article>
+    <article class="topology-card c-card">
+      <span class="mode-label">pinned image</span>
+      <h3>Repeatable ASM path</h3>
+      <pre><code>ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-&lt;sha&gt;
+  └─ compare across stack variants</code></pre>
+      <p>Used to prove that the shared ASM LB keeps correctness and latency stable across downstream stacks.</p>
+    </article>
+  </div>
+</section>
+
+<section class="evidence-section" aria-labelledby="evidence-title">
+  <div class="section-kicker">comparison matrix</div>
+  <div class="section-heading-row">
+    <h2 id="evidence-title">Promotion did not remove the benchmark gate.</h2>
+    <p>Every stack still needs repeated clean runs before a downstream rollout is considered stable.</p>
+  </div>
+
+  <div class="matrix-grid">
+    <div class="matrix-cell">
+      <span>C baseline</span>
+      <strong>yolo-c-lb</strong>
+      <strong>c-ci-&lt;sha&gt;</strong>
+    </div>
+    <div class="matrix-cell">
+      <span>ASM promoted</span>
+      <strong>yolo-standalone-asm-lb</strong>
+      <strong>asm-ci-&lt;sha&gt;</strong>
+    </div>
+  </div>
+
+  <article class="comparison-status">
+    {hasComparison ? (
+      <>
+        <span class="status-pill good">summary available</span>
+        <h3>{participants.length} participant rows archived</h3>
+        <p>Latest summary: <code>{generatedAt ?? 'timestamp not recorded'}</code>.</p>
+        <a class="text-link" href={`${base}/reports/`}>Inspect participant deltas</a>
+      </>
+    ) : (
+      <>
+        <span class="status-pill pending">waiting for run</span>
+        <h3>No comparison summary is archived yet.</h3>
+        <p>Dispatch the LB Comparison Benchmark workflow on the <code>comparison</code> branch. When it writes <code>comparison-results/latest.json</code>, Pages will render it here and under reports.</p>
+        <a class="text-link" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open comparison workflow</a>
+      </>
+    )}
+  </article>
+</section>

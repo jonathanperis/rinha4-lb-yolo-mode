@@ -1,0 +1,75 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Navbar from '@/components/home/Navbar.astro';
+import Footer from '@/components/home/Footer.astro';
+
+let comparison: any = null;
+try {
+  comparison = (await import('../../../public/comparison/latest.json')).default;
+} catch {
+  comparison = null;
+}
+const participants = Array.isArray(comparison?.participants) ? comparison.participants : (Array.isArray(comparison?.results) ? comparison.results : []);
+const rows = participants;
+const fmt = (value: any) => value === undefined || value === null || value === '' ? 'not recorded' : String(value);
+const score = (row: any) => fmt(row.final_score ?? row.score ?? row.summary?.final_score);
+const p99 = (row: any) => fmt(row.p99 ?? row.summary?.p99);
+const failures = (row: any) => fmt(row.failure_rate ?? row.failures ?? row.summary?.failure_rate);
+const errors = (row: any) => fmt(row.http_errors ?? row.summary?.http_errors);
+---
+
+<BaseLayout title="rinha4-lb-yolo-mode | Comparison Reports">
+  <Navbar />
+  <main>
+    <section class="reports-hero">
+      <p class="eyebrow">LB comparison archive</p>
+      <h1>ASM default comparison archive.</h1>
+      <p class="tagline">
+        Official-like workflow summaries compare downstream Rinha4 stacks while pinning the promoted ASM LB for repeatable evidence.
+      </p>
+    </section>
+
+    {rows.length > 0 ? (
+      <section class="report-table-wrap">
+        <div class="report-intro">
+          <span class="status-pill good">summary available</span>
+          <p>Source: <code>docs/public/comparison/latest.json</code>. Generated: <code>{fmt(comparison.generated_at ?? comparison.timestamp)}</code>.</p>
+        </div>
+        <div class="report-scroll">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Participant</th>
+                <th class="num">p99</th>
+                <th class="num">Failures</th>
+                <th class="num">Score</th>
+                <th class="num">HTTP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr>
+                  <td><code>{fmt(row.participant ?? row.name)}</code></td>
+                  <td class="num">{p99(row)}</td>
+                  <td class="num danger-text">{failures(row)}</td>
+                  <td class="num">{score(row)}</td>
+                  <td class="num">{errors(row)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    ) : (
+      <section class="empty-report">
+        <span class="status-pill pending">waiting for run</span>
+        <h2>No comparison summary is archived yet.</h2>
+        <p>
+          Dispatch the benchmark workflow on the <code>comparison</code> branch. It writes <code>comparison-results/latest.json</code>, and the Pages workflow copies that file to <code>docs/public/comparison/latest.json</code> before building this route.
+        </p>
+        <a class="button primary" href="https://github.com/jonathanperis/rinha4-lb-yolo-mode/actions/workflows/benchmark.yml" target="_blank" rel="noopener noreferrer">Open comparison workflow</a>
+      </section>
+    )}
+  </main>
+  <Footer />
+</BaseLayout>
