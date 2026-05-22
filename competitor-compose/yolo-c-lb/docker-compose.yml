@@ -33,7 +33,7 @@ services:
           memory: "30M"
 
   api1:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-2b076359e565078a5c057e482b2746b561de07e5"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-02db84d7082f5767a9b7fb3aa4e624a4492b8deb"
     command: ["/app/api", "/tmp/rinha/api1.sock"]
     platform: linux/amd64
     volumes:
@@ -53,7 +53,7 @@ services:
           memory: "160M"
 
   api2:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-2b076359e565078a5c057e482b2746b561de07e5"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-02db84d7082f5767a9b7fb3aa4e624a4492b8deb"
     command: ["/app/api", "/tmp/rinha/api2.sock"]
     platform: linux/amd64
     volumes:
