@@ -2,7 +2,7 @@ name: 'rinha-2026-dotnet'
 
 services:
   webapi1: &webapi
-    image: "ghcr.io/jonathanperis/rinha4-back-end-dotnet:ci-5cc9ef10396318bfc181b1a53fe981f27d4b35e7"
+    image: "ghcr.io/jonathanperis/rinha4-back-end-dotnet:latest"
     container_name: webapi-1
     cpuset: "0,1"
     security_opt:
@@ -135,7 +135,7 @@ services:
 
 
   lb:
-    image: "${LB_ASM_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-3a76d8925d0bed0088a17c0b3223774221571a0e}"
+    image: "${LB_ASM_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:latest}"
     container_name: rinha-lb
     platform: linux/amd64
     cpuset: "0,2"
