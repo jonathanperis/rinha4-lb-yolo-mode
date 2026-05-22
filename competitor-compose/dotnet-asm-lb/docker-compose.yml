@@ -2,7 +2,7 @@ name: 'rinha-2026-dotnet'
 
 services:
   webapi1: &webapi
-    image: ghcr.io/jonathanperis/rinha4-back-end-dotnet:ci-0c5241fb8959386b7200a10752d34b325b59c7ef
+    image: "ghcr.io/jonathanperis/rinha4-back-end-dotnet:ci-5cc9ef10396318bfc181b1a53fe981f27d4b35e7"
     container_name: webapi-1
     cpuset: "0,1"
     security_opt:
@@ -17,13 +17,18 @@ services:
       DOTNET_ThreadPool_UnfairSemaphoreSpinLimit: "0"
       DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS: "1"
       DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT: "1"
-      ACCEPT_LOOPS: "${ACCEPT_LOOPS:-2}"
+      ACCEPT_LOOPS: "${ACCEPT_LOOPS:-1}"
       MIN_WORKER_THREADS: "${MIN_WORKER_THREADS:-128}"
       MAX_WORKER_THREADS: "${MAX_WORKER_THREADS:-}"
       MAX_IO_THREADS: "${MAX_IO_THREADS:-}"
+      THREADPOOL_PREFER_LOCAL: "${THREADPOOL_PREFER_LOCAL:-0}"
       SCORER_MODE: "${SCORER_MODE:-hybrid}"
+      SUBMITTED_FAST_PATH: "${SUBMITTED_FAST_PATH:-1}"
       BIND_ADDR: fd:/sockets/api1.sock.ctrl
       FD_RAW: "${FD_RAW:-1}"
+      FD_BUSY_POLL_US: "${FD_BUSY_POLL_US:-0}"
+      FD_TCP_NODELAY: "${FD_TCP_NODELAY:-0}"
+      FD_TCP_QUICKACK: "${FD_TCP_QUICKACK:-0}"
       DATA_DIR: /data
       EXACT_PATH: /data/references.bin
       IVF_PATH: /data/references.ivf.bin
@@ -33,8 +38,13 @@ services:
       IVF_BBOX_REPAIR: "${IVF_BBOX_REPAIR:-true}"
       IVF_REPAIR_MIN_FRAUDS: "${IVF_REPAIR_MIN_FRAUDS:-0}"
       IVF_REPAIR_MAX_FRAUDS: "${IVF_REPAIR_MAX_FRAUDS:-5}"
+      IVF_PEDRO_DECISION_PATH: "${IVF_PEDRO_DECISION_PATH:-0}"
+      IVF_BORDERLINE_MIN_FRAUDS: "${IVF_BORDERLINE_MIN_FRAUDS:-2}"
+      IVF_BORDERLINE_MAX_FRAUDS: "${IVF_BORDERLINE_MAX_FRAUDS:-3}"
+      IVF_BORDERLINE_NPROBE: "${IVF_BORDERLINE_NPROBE:-32}"
+      IVF_BORDERLINE_RERANK: "${IVF_BORDERLINE_RERANK:-128}"
       IVF_ZERO_FAST_APPROVE_WORST_DISTANCE: "${IVF_ZERO_FAST_APPROVE_WORST_DISTANCE:-5000000}"
-      IVF_FIVE_FAST_DENY_WORST_DISTANCE: "${IVF_FIVE_FAST_DENY_WORST_DISTANCE:-4000000}"
+      IVF_FIVE_FAST_DENY_WORST_DISTANCE: "${IVF_FIVE_FAST_DENY_WORST_DISTANCE:-2000000}"
       BUCKET_PATH: /data/references.bucket.bin
       BUCKET_EARLY_CANDIDATES: "${BUCKET_EARLY_CANDIDATES:-9800}"
       BUCKET_MIN_CANDIDATES: "${BUCKET_MIN_CANDIDATES:-16150}"
@@ -58,8 +68,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.42"
-          memory: "160MB"
+          cpus: "0.425"
+          memory: "165MB"
     ulimits:
       nofile:
         soft: 65535
@@ -76,13 +86,18 @@ services:
       DOTNET_ThreadPool_UnfairSemaphoreSpinLimit: "0"
       DOTNET_SYSTEM_NET_SOCKETS_INLINE_COMPLETIONS: "1"
       DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT: "1"
-      ACCEPT_LOOPS: "${ACCEPT_LOOPS:-2}"
+      ACCEPT_LOOPS: "${ACCEPT_LOOPS:-1}"
       MIN_WORKER_THREADS: "${MIN_WORKER_THREADS:-128}"
       MAX_WORKER_THREADS: "${MAX_WORKER_THREADS:-}"
       MAX_IO_THREADS: "${MAX_IO_THREADS:-}"
+      THREADPOOL_PREFER_LOCAL: "${THREADPOOL_PREFER_LOCAL:-0}"
       SCORER_MODE: "${SCORER_MODE:-hybrid}"
+      SUBMITTED_FAST_PATH: "${SUBMITTED_FAST_PATH:-1}"
       BIND_ADDR: fd:/sockets/api2.sock.ctrl
       FD_RAW: "${FD_RAW:-1}"
+      FD_BUSY_POLL_US: "${FD_BUSY_POLL_US:-0}"
+      FD_TCP_NODELAY: "${FD_TCP_NODELAY:-0}"
+      FD_TCP_QUICKACK: "${FD_TCP_QUICKACK:-0}"
       DATA_DIR: /data
       EXACT_PATH: /data/references.bin
       IVF_PATH: /data/references.ivf.bin
@@ -92,8 +107,13 @@ services:
       IVF_BBOX_REPAIR: "${IVF_BBOX_REPAIR:-true}"
       IVF_REPAIR_MIN_FRAUDS: "${IVF_REPAIR_MIN_FRAUDS:-0}"
       IVF_REPAIR_MAX_FRAUDS: "${IVF_REPAIR_MAX_FRAUDS:-5}"
+      IVF_PEDRO_DECISION_PATH: "${IVF_PEDRO_DECISION_PATH:-0}"
+      IVF_BORDERLINE_MIN_FRAUDS: "${IVF_BORDERLINE_MIN_FRAUDS:-2}"
+      IVF_BORDERLINE_MAX_FRAUDS: "${IVF_BORDERLINE_MAX_FRAUDS:-3}"
+      IVF_BORDERLINE_NPROBE: "${IVF_BORDERLINE_NPROBE:-32}"
+      IVF_BORDERLINE_RERANK: "${IVF_BORDERLINE_RERANK:-128}"
       IVF_ZERO_FAST_APPROVE_WORST_DISTANCE: "${IVF_ZERO_FAST_APPROVE_WORST_DISTANCE:-5000000}"
-      IVF_FIVE_FAST_DENY_WORST_DISTANCE: "${IVF_FIVE_FAST_DENY_WORST_DISTANCE:-4000000}"
+      IVF_FIVE_FAST_DENY_WORST_DISTANCE: "${IVF_FIVE_FAST_DENY_WORST_DISTANCE:-2000000}"
       BUCKET_PATH: /data/references.bucket.bin
       BUCKET_EARLY_CANDIDATES: "${BUCKET_EARLY_CANDIDATES:-9800}"
       BUCKET_MIN_CANDIDATES: "${BUCKET_MIN_CANDIDATES:-16150}"
@@ -115,7 +135,7 @@ services:
 
 
   lb:
-    image: ${LB_ASM_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-dcc6b89ca9d21c7a8dbb1588a6bfbbc0bd20bb91}
+    image: "${LB_ASM_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:asm-ci-3a76d8925d0bed0088a17c0b3223774221571a0e}"
     container_name: rinha-lb
     platform: linux/amd64
     cpuset: "0,2"
@@ -125,7 +145,6 @@ services:
     environment:
       LB_MODE: "fdpass"
       LB_FDPASS_SOCKET_TYPE: "stream"
-      LB_FDPASS_SNDBUF: "${LB_FDPASS_SNDBUF:-262144}"
       PORT: "9999"
       UPSTREAMS: "/sockets/api1.sock.ctrl,/sockets/api2.sock.ctrl"
     volumes:
@@ -134,12 +153,12 @@ services:
       - webapi1
       - webapi2
     ports:
-      - "${HOST_PORT:-9999}:9999"
+      - "9999:9999"
     deploy:
       resources:
         limits:
-          cpus: "0.16"
-          memory: "30MB"
+          cpus: "0.15"
+          memory: "20MB"
     ulimits:
       nofile:
         soft: 65535

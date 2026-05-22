@@ -1,12 +1,13 @@
 services:
   lb:
-    image: "${LB_C_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:c-ci-9d6e2c4b9a930607eb0c29d5bb0a31c2bdd685ad}"
+    image: "${LB_C_IMAGE:-ghcr.io/jonathanperis/rinha4-lb-yolo-mode:c-ci-3a76d8925d0bed0088a17c0b3223774221571a0e}"
     platform: linux/amd64
     pull_policy: always
     user: root
     environment:
       LB_MODE: "fdpass"
       LB_FDPASS_SOCKET_TYPE: "stream"
+      LB_FDPASS_SNDBUF: "${LB_FDPASS_SNDBUF:-262144}"
       PORT: "9999"
       UPSTREAMS: "/tmp/rinha/api1.sock,/tmp/rinha/api2.sock"
       BACKLOG: "65535"
@@ -28,14 +29,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.08"
+          cpus: "0.06"
           memory: "30M"
 
   api1:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-1862a311c01a2b787ddc71ccd1528a1b8e6a7527"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-2b076359e565078a5c057e482b2746b561de07e5"
     command: ["/app/api", "/tmp/rinha/api1.sock"]
     platform: linux/amd64
-    pull_policy: always
     volumes:
       - sockets:/tmp/rinha
     networks:
@@ -49,14 +49,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.46"
+          cpus: "0.47"
           memory: "160M"
 
   api2:
-    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-1862a311c01a2b787ddc71ccd1528a1b8e6a7527"
+    image: "ghcr.io/jonathanperis/rinha4-yolo-mode:ci-2b076359e565078a5c057e482b2746b561de07e5"
     command: ["/app/api", "/tmp/rinha/api2.sock"]
     platform: linux/amd64
-    pull_policy: always
     volumes:
       - sockets:/tmp/rinha
     networks:
@@ -70,7 +69,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.46"
+          cpus: "0.47"
           memory: "160M"
 
 networks:
