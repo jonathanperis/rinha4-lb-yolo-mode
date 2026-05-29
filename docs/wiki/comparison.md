@@ -28,3 +28,21 @@ Do not merge `main` wholesale into `comparison` just to refresh the harness. Cop
 - Record whether the fdpass socket contract is `seqpacket` or `stream`.
 - Keep CI-vs-CI and official-vs-official conclusions separate.
 - Reject correctness failures before evaluating p99.
+
+## Workflow dispatch inputs
+
+Use the `LB Comparison Benchmark` workflow with `ref=comparison` for real runs. The workflow copy on `main` exists so Actions can discover and dispatch it.
+
+| Input | Use |
+| --- | --- |
+| `compose_file` | `all-comparison` for the active matrix, or a single `competitor-compose/.../docker-compose.yml` participant. |
+| `official_ref` | Ref of `zanfranceschi/rinha-de-backend-2026` cloned by the runner. |
+| `k6_image` | Docker image used when `benchmark_k6_mode=docker`. |
+| `lb_c_image` | Optional C baseline override; pin `c-ci-<sha>` for repeatability. |
+| `lb_asm_image` | Optional ASM override; pin `asm-ci-<sha>` for repeatability. |
+| `lb_fdpass_sndbuf` | Compose-level fdpass send-buffer value for participants that honor it. |
+| `benchmark_repetitions` | Number of k6 repetitions. Increase when investigating noisy p99 deltas. |
+| `benchmark_k6_mode` | `native` for runner-installed k6, or `docker` for `k6_image`. |
+| `benchmark_runner` | `matrix` runs participants separately; `sequential` runs all participants on one runner and captures host metadata. |
+
+The summarize job writes `comparison-results/latest.json` and `comparison-results/run-<run_number>.json` on the `comparison` branch. Pages copies `latest.json` into `docs/public/comparison/latest.json` before building the reports route.

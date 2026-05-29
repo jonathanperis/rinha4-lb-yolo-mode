@@ -40,6 +40,7 @@ def main() -> None:
     getting_started = read("docs/wiki/getting-started.md")
     performance = read("docs/wiki/performance.md")
     comparison = read("docs/wiki/comparison.md")
+    operations = read("docs/wiki/operations.md")
     docs_readme = read("docs/README.md")
     build_workflow = read(".github/workflows/build.yml")
     benchmark_workflow = read(".github/workflows/benchmark.yml")
@@ -62,6 +63,7 @@ def main() -> None:
         "docs/wiki/getting-started.md": getting_started,
         "docs/wiki/performance.md": performance,
         "docs/wiki/comparison.md": comparison,
+        "docs/wiki/operations.md": operations,
     }.items():
         require(text, "asm-ci-<sha>", doc_name)
         require(text, "c-ci-<sha>", doc_name)
@@ -100,6 +102,7 @@ def main() -> None:
         "README.md": readme,
         "docs/wiki/contracts.md": contracts,
         "docs/wiki/getting-started.md": getting_started,
+        "docs/wiki/operations.md": operations,
     }.items():
         require(text, "linux/amd64", doc_name)
         require(text, "rinha", doc_name)
@@ -114,11 +117,33 @@ def main() -> None:
     for participant in participants:
         require(comparison, f"`{participant}`", "docs/wiki/comparison.md")
 
+    for workflow_name in ["Build and publish LB images", "Deploy GitHub Pages", "LB Comparison Benchmark", "CodeQL"]:
+        require(readme + operations, workflow_name, "README/operations workflow docs")
+    for benchmark_input in [
+        "compose_file",
+        "official_ref",
+        "k6_image",
+        "lb_c_image",
+        "lb_asm_image",
+        "lb_fdpass_sndbuf",
+        "benchmark_repetitions",
+        "benchmark_k6_mode",
+        "benchmark_runner",
+    ]:
+        require(benchmark_workflow, benchmark_input, ".github/workflows/benchmark.yml")
+        require(comparison + operations, benchmark_input, "comparison/operations docs")
+    for live_route in ["/docs/contracts/", "/docs/getting-started/", "/docs/operations/", "/reports/"]:
+        require(operations, live_route, "docs/wiki/operations.md")
+
     # Pages docs should track production build knobs.
     for needle in ["node-version: '22'", "PUBLIC_GA_ID: G-VN29JG8MTG", "path: docs/out"]:
         require(pages_workflow, needle, ".github/workflows/pages.yml")
     for needle in ["Node 22", "PUBLIC_GA_ID=G-VN29JG8MTG", "docs/out"]:
         require(docs_readme, needle, "docs/README.md")
+
+    require(sidebar, "operations", "docs/src/config/sidebar.config.ts")
+    docs_route = read("docs/src/pages/docs/[...slug].astro")
+    require(docs_route, "operations: 'Operations Runbook'", "docs/src/pages/docs/[...slug].astro")
 
     # Every sidebar wiki slug must have a page and every page should be listed.
     listed: list[str] = []

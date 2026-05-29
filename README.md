@@ -120,6 +120,12 @@ GitHub Pages lives under `docs/` and follows the same structure used by the Rinh
 - `/docs/` markdown-backed wiki from `docs/wiki/*.md`;
 - `/reports/` latest comparison summary copied from `comparison-results/latest.json` when that artifact exists.
 
+Useful wiki pages:
+
+- `docs/wiki/contracts.md` documents runtime variables, image tags, and proxy/fdpass contracts;
+- `docs/wiki/comparison.md` documents the active comparison branch and evidence rules;
+- `docs/wiki/operations.md` is the runbook for local gates, workflows, benchmark dispatch, deployment smoke tests, and runtime troubleshooting.
+
 Build locally with Bun:
 
 ```bash
@@ -127,3 +133,12 @@ cd docs
 bun install --frozen-lockfile
 NODE_ENV=production bun run build
 ```
+
+## CI and release workflow map
+
+| Workflow | Purpose |
+| --- | --- |
+| `Build and publish LB images` | Runs `make clean test`, builds linux/amd64 ASM and C images, and publishes `latest`, release tags, `asm-ci-<sha>`, `sha-<short-sha>`, `c-ci-<sha>`, and `c-latest` outside PRs. |
+| `Deploy GitHub Pages` | Builds the Astro docs with Bun, Node 22, `NODE_ENV=production`, and `PUBLIC_GA_ID=G-VN29JG8MTG`, then deploys `docs/out`. |
+| `LB Comparison Benchmark` | Runs comparison-branch compose participants and archives `comparison-results/latest.json` for the reports page. |
+| `CodeQL` | Runs GitHub code scanning. |

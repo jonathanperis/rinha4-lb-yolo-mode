@@ -34,3 +34,5 @@ make docs-drift
 ```
 
 That script compares README/wiki facts with source and workflow truth: image tag contracts, runtime environment knobs, Makefile targets, benchmark participants, Pages build knobs, and sidebar/wiki coverage. Update the check when adding a new public contract so future docs edits fail fast instead of silently drifting.
+
+The operations runbook lives at `wiki/operations.md`; keep it current when changing workflow behavior, benchmark dispatch inputs, deployment handling, or the live smoke checklist.

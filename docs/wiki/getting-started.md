@@ -84,3 +84,17 @@ docker build --build-arg LB_IMPL=c   -t rinha4-lb-yolo-mode:c .
 Docker access is required for image builds. The repository integration tests do not require Docker.
 
 The Dockerfile publishes linux/amd64 images, builds the ASM implementation by default, strips the binary, exposes port `9999`, and runs the runtime stage as the unprivileged `rinha` user. Override `LB_IMPL=c` only when building the C comparison image.
+
+## Before pushing
+
+Use the full local gate for changes that touch runtime behavior, docs, workflows, or public contracts:
+
+```sh
+git diff --check
+make clean test
+cd docs
+bun install --frozen-lockfile
+NODE_ENV=production bun run build
+```
+
+After pushing to `main`, watch `Build and publish LB images`, `Deploy GitHub Pages`, and CodeQL for the pushed head, then smoke the live Pages routes listed in the operations runbook.
