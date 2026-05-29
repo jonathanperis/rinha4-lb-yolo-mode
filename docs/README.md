@@ -24,3 +24,13 @@ Run from this directory (`docs/`):
 The site mirrors the same repo layout used by the Rinha4 API repos: a home page, a markdown-backed wiki under `/docs/`, and a report page under `/reports/`.
 
 The Pages workflow uses Bun, Node 22, `NODE_ENV=production`, and `PUBLIC_GA_ID=G-VN29JG8MTG` before uploading `docs/out`.
+
+## Drift checks
+
+From the repository root, run:
+
+```sh
+make docs-drift
+```
+
+That script compares README/wiki facts with source and workflow truth: image tag contracts, runtime environment knobs, Makefile targets, benchmark participants, Pages build knobs, and sidebar/wiki coverage. Update the check when adding a new public contract so future docs edits fail fast instead of silently drifting.

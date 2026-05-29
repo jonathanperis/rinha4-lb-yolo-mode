@@ -4,9 +4,10 @@
 
 ```sh
 make clean test
+make docs-drift
 ```
 
-The test target builds the C and ASM load balancers, then runs local integration checks against dummy Unix-socket backends.
+The test target builds the C and ASM load balancers, runs `docs-drift`, then runs local integration checks against dummy Unix-socket backends. `docs-drift` is the quick audit for README/wiki drift: it checks image tags, runtime knobs, workflow inputs, and sidebar coverage against source files.
 
 ```sh
 make clean all            # default ASM binary: build/rinha4-lb-yolo-mode
@@ -81,3 +82,5 @@ docker build --build-arg LB_IMPL=c   -t rinha4-lb-yolo-mode:c .
 ```
 
 Docker access is required for image builds. The repository integration tests do not require Docker.
+
+The Dockerfile publishes linux/amd64 images, builds the ASM implementation by default, strips the binary, exposes port `9999`, and runs the runtime stage as the unprivileged `rinha` user. Override `LB_IMPL=c` only when building the C comparison image.

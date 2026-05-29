@@ -13,8 +13,11 @@
 Compatibility notes:
 
 - The promoted ASM binary reads `LB_MODE`, `PORT`, `BACKLOG`, `UPSTREAMS`, and `LB_FDPASS_SOCKET_TYPE` directly from its environment.
+- The ASM binary is static/no-libc and ignores unrelated environment variables injected by Docker or GitHub Actions.
 - The C baseline accepts `MODE` as a fallback when `LB_MODE` is unset, and also accepts `uds-proxy`/`unix-proxy` for proxy mode.
-- The ASM binary intentionally requires exactly two upstream paths. The C baseline supports up to 16 upstreams.
+- The ASM binary intentionally requires exactly two non-empty upstream paths shorter than the Linux `sun_path` limit. The C baseline supports up to 16 upstreams.
+- ASM `PORT` and `BACKLOG` parsing accepts positive decimal values up to `65535`; invalid values fall back to `9999` and `65535` respectively.
+- Published containers target linux/amd64 and run as the unprivileged `rinha` user.
 
 ## Image contract
 

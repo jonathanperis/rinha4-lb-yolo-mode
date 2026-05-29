@@ -49,6 +49,7 @@ The ASM implementation accepts client sockets in blocking mode for fdpass so sim
 The default ASM LB is intentionally narrow:
 
 - exactly two upstream workers, matching the Rinha4 topology and enforced by the ASM validation path;
+- static/no-libc runtime with direct Linux syscalls and linux/amd64 container publishing;
 - no fraud payload parsing;
 - no request-level logging;
 - fixed minimal syscall path;

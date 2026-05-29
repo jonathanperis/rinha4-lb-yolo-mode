@@ -83,6 +83,29 @@ def main() -> None:
             require(makefile, target, "Makefile")
         else:
             require(readme + getting_started, target, "README/getting-started docs")
+    require(makefile, "docs-drift", "Makefile")
+    for doc_name, text in {
+        "README.md": readme,
+        "docs/wiki/getting-started.md": getting_started,
+        "docs/README.md": docs_readme,
+    }.items():
+        require(text, "make docs-drift", doc_name)
+
+    # Container/runtime implementation facts that are easy to omit from user docs.
+    dockerfile = read("Dockerfile")
+    require(dockerfile, "ARG LB_IMPL=asm", "Dockerfile")
+    require(dockerfile, "USER rinha", "Dockerfile")
+    require(dockerfile, "EXPOSE 9999", "Dockerfile")
+    for doc_name, text in {
+        "README.md": readme,
+        "docs/wiki/contracts.md": contracts,
+        "docs/wiki/getting-started.md": getting_started,
+    }.items():
+        require(text, "linux/amd64", doc_name)
+        require(text, "rinha", doc_name)
+    require(readme + contracts, "65535", "README/contracts docs")
+    require(asm_source, "cmp edx, 6553", "src/yolo_lb_fdpass.S")
+    require(asm_source, "cmp edx, 107", "src/yolo_lb_fdpass.S")
 
     # Active comparison-branch participants from the workflow must appear in comparison docs.
     participants = re.findall(r"^\s*-?\s*name: ([a-z0-9-]+)$", benchmark_workflow, re.MULTILINE)

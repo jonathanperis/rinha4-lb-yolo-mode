@@ -37,6 +37,14 @@ The ASM implementation is intentionally narrow for the Rinha4 topology: exactly 
 | `BACKLOG` | `65535` | TCP listen backlog. Invalid numeric values fall back to `65535` in the integration-tested paths. |
 | `LB_FDPASS_SOCKET_TYPE` | `seqpacket` | FD-passing control socket type. Use `seqpacket` or `stream` to match the backend control socket. |
 
+Runtime guardrails worth keeping visible in compose reviews:
+
+- published images are linux/amd64 only and the Docker runtime drops to the unprivileged `rinha` user;
+- the ASM binary is static/no-libc, reads only the documented environment knobs, and ignores unrelated container metadata;
+- ASM decimal parsing accepts positive values up to `65535` for `PORT`/`BACKLOG`; invalid or out-of-range values fall back to the defaults;
+- ASM `UPSTREAMS` validation requires exactly two non-empty Unix socket paths shorter than the Linux `sun_path` limit; the C baseline is broader and accepts up to 16 paths;
+- use `LB_FDPASS_SOCKET_TYPE=stream` only when the backend control sockets are `SOCK_STREAM`; leave the default `seqpacket` for seqpacket control sockets.
+
 ## .NET/raw-UDS compose example
 
 ```yaml
@@ -87,12 +95,13 @@ environment:
 
 ```bash
 make clean test           # builds C + ASM and runs integration tests
+make docs-drift           # checks README/wiki facts against source/workflows
 make clean all            # builds the default ASM binary at build/rinha4-lb-yolo-mode
 make asm                  # builds build/rinha4-lb-yolo-mode-asm
 make c                    # builds build/rinha4-lb-yolo-mode-c
 ```
 
-The test target runs proxy and fdpass smoke checks against local dummy Unix-socket backends. The ASM test also validates bad mode handling, upstream validation, decimal parsing fallback, and stream-vs-seqpacket fdpass selection.
+The test target runs `docs-drift`, then proxy and fdpass smoke checks against local dummy Unix-socket backends. The ASM test also validates bad mode handling, upstream validation, decimal parsing fallback, and stream-vs-seqpacket fdpass selection.
 
 ## Container builds
 
