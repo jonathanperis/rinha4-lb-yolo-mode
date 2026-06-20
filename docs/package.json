@@ -11,7 +11,7 @@
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.2.1",
     "@astrojs/sitemap": "^3.6.0",
-    "astro": "6.4.0"
+    "astro": "6.4.6"
   },
   "devDependencies": {
     "typescript": "^6.0.0"
